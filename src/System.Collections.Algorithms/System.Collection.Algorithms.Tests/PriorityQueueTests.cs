@@ -29,6 +29,13 @@ namespace System.Collection.Algorithms.Tests
         }
 
         [Fact]
+        public void GIvenEmptyQueueWhenCheckingIsEmptyShouldReturnTrue()
+        {
+            var queue = new PriorityQueue<int, int>();
+            Assert.True(queue.IsEmpty);
+        }
+
+        [Fact]
         public void GivenEmptyPriorityQueueWhenPeekElementThenThrowInvalidOpearionException()
         {
             var queue = new PriorityQueue<int, int>();
@@ -60,7 +67,7 @@ namespace System.Collection.Algorithms.Tests
         {
             var queue = new PriorityQueue<int, int>(new Dictionary<int, int>() { { 1, 1 }, { 2, 2 }, { 3, 3 }, { 4, 4 }, { 5, 5 } });
             var previous = int.MinValue;
-            while (queue.Count != 0)
+            while (queue.IsEmpty)
             {
                 Assert.True(queue.Peek().Key >= previous);
                 previous = queue.Dequeue().Key;
@@ -71,13 +78,13 @@ namespace System.Collection.Algorithms.Tests
         public void GivenQueuePopulatedRandomlyeWhenDequeuAllElementsThenEachElementIsSmallerOrEqualThanPrevious()
         {
             var queue = new PriorityQueue<int, int>();
-            var rand = new System.Random(42);
+            var rand = new Random(42);
             for (int i = 0; i < 10000; i++)
             {
                 queue.Enqueue(rand.Next(1000000), 0);
             }
             var previous = int.MinValue;
-            while (queue.Count != 0)
+            while (queue.IsEmpty)
             {
                 Assert.True(queue.Peek().Key >= previous);
                 previous = queue.Dequeue().Key;
