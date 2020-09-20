@@ -26,6 +26,15 @@
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="PriorityQueue{TKey, TValue}"/> class that is empty, has the specified initial capacity, and uses the default <see cref="IComparer{TKey}"/>.
+        /// </summary>
+        /// <param name="capacity">The initial number of elements that the <see cref="PriorityQueue{TKey, TValue}"/> can contain.</param>
+        public PriorityQueue(int capacity)
+            : this(capacity, null)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="PriorityQueue{TKey, TValue}"/> class.
         /// Creates priority queue where order defined by provided comparer.
         /// </summary>
@@ -34,6 +43,17 @@
         {
             _comparer = new KeyComparer(comparer);
             _data = new List<KeyValuePair<TKey, TValue>>();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PriorityQueue{TKey, TValue}"/> class that is empty, has the specified initial capacity, and uses the specified <see cref="IComparer{TKey}"/>.
+        /// </summary>
+        /// <param name="capacity">The initial number of elements that the <see cref="PriorityQueue{TKey, TValue}"/> can contain.</param>
+        /// <param name="comparer">Comparer to manage order of the keys.</param>
+        public PriorityQueue(int capacity, IComparer<TKey>? comparer)
+        {
+            _comparer = new KeyComparer(comparer);
+            _data = new List<KeyValuePair<TKey, TValue>>(capacity);
         }
 
         /// <summary>
