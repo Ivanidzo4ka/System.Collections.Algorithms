@@ -269,7 +269,7 @@
         }
 
         [Serializable]
-        public sealed class KeyComparer : Comparer<TKey>
+        internal sealed class KeyComparer : Comparer<TKey>
         {
             // Do not rename (binary serialization)
             internal IComparer<TKey> keyComparer;
