@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
+using System.Linq;
 
 namespace System.Collections.Algorithms
 {
@@ -27,15 +26,20 @@ namespace System.Collections.Algorithms
         public Treap(IEnumerable<T> collection)
             : this((IComparer<T>?)null)
         {
-            foreach (var item in collection)
-                Add(item);
+            T[] elements = collection.ToArray();
+            int count = elements.Length;
+            if (count > 0)
+            {
+                Array.Sort(elements, 0, count, _comparer);
+                _root = Build(elements, 0, count);
+            }
         }
 
         public int Count => GetCount(_root);
 
-        public void Add(T item, int? key = null)
+        public void Add(T item, int? prior = null)
         {
-            var toAdd = new Node(item, key ?? _random.Next());
+            var toAdd = new Node(item, prior ?? _random.Next());
             _version++;
             Insert(ref _root, toAdd);
         }
@@ -56,7 +60,6 @@ namespace System.Collections.Algorithms
             _version++;
         }
 
-
         public Enumerator GetEnumerator() => new Enumerator(this);
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
@@ -71,6 +74,33 @@ namespace System.Collections.Algorithms
                     throw new ArgumentOutOfRangeException(nameof(index));
                 return GetKthElement(index);
             }
+        }
+
+        public IEnumerable<T> Reverse()
+        {
+            Enumerator e = new Enumerator(this, reverse: true);
+            while (e.MoveNext())
+            {
+                yield return e.Current;
+            }
+        }
+
+        public bool Contains(T item)
+        {
+            if (_root is null)
+                return false;
+            var current = _root;
+            while (current != null)
+            {
+                var comparison = _comparer.Compare(current.Value, item);
+                if (comparison == 0)
+                    return true;
+                else if (comparison == 1)
+                    current = current.Left;
+                else
+                    current = current.Right;
+            }
+            return false;
         }
 
         private void Merge(ref Node? current, Node? left, Node? right)
@@ -89,6 +119,7 @@ namespace System.Collections.Algorithms
                 Merge(ref right.Left, left, right.Left);
                 current = right;
             }
+
             UpdateCount(current);
         }
 
@@ -193,6 +224,41 @@ namespace System.Collections.Algorithms
             return left;
         }
 
+        private void Heapify(Node node)
+        {
+            while (node != null)
+            {
+                Node max = node;
+                if (node.Left != null && node.Left.Prior > node.Prior)
+                    max = node.Left;
+                if (node.Right != null && node.Right.Prior > max.Prior)
+                    max = node.Right;
+                if (max != node)
+                {
+                    int temp = max.Prior;
+                    max.Prior = node.Prior;
+                    node.Prior = temp;
+                }
+                else
+                {
+                    return;
+                }
+            }
+        }
+
+        private Node? Build(T[] items, int start, int end)
+        {
+            if (end - start == 0)
+                return null;
+            int mid = start + ((end - start) / 2);
+            Node toAdd = new Node(items[mid], _random.Next());
+            toAdd.Left = Build(items, start, mid);
+            toAdd.Right = Build(items, mid + 1, end);
+            UpdateCount(toAdd);
+            Heapify(toAdd);
+            return toAdd;
+        }
+
         private T GetKthElement(int k)
         {
             var current = _root;
@@ -223,7 +289,7 @@ namespace System.Collections.Algorithms
         internal class Node
         {
             public readonly T Value;
-            public readonly int Prior;
+            public int Prior;
             public int Size;
             public Node? Left;
             public Node? Right;

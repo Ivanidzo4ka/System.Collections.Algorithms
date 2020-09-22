@@ -53,11 +53,46 @@ namespace System.Collection.Algorithms.Tests
         {
             var collection = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
             var treap = new Treap<int>(collection);
+            Assert.Equal(20, treap.Count);
             var pos = 0;
             foreach (var item in treap)
             {
                 Assert.Equal(collection[pos++], item);
             }
+        }
+
+        [Fact]
+        public void GivenTreapWhenWalkingInReverseOrderGetCorrectResults()
+        {
+            var collection = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
+            var treap = new Treap<int>(collection);
+            Assert.Equal(20, treap.Count);
+            var pos = collection.Count - 1;
+            foreach (var item in treap.Reverse())
+            {
+                Assert.Equal(collection[pos--], item);
+            }
+        }
+
+        [Fact]
+        public void GivenTreapWhenLookingForExistingElementThenContainsTrue()
+        {
+            var collection = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
+
+            var treap = new Treap<int>(collection);
+            foreach (var item in collection)
+                Assert.True(treap.Contains(item));
+        }
+
+        [Fact]
+        public void GivenTreapWhenLookingForNonExistingElementThenContainsFalse()
+        {
+            var collection = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
+
+            var treap = new Treap<int>(collection);
+            Assert.False(treap.Contains(0));
+            Assert.False(treap.Contains(-1));
+            Assert.False(treap.Contains(21));
         }
     }
 }
