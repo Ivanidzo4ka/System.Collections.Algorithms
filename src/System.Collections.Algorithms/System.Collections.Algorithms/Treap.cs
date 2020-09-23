@@ -1,21 +1,33 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace System.Collections.Algorithms
+﻿namespace System.Collections.Algorithms
 {
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+
+    /// <summary>
+    /// Treap, aka Cartesian Tree, is randomized balanced search tree.
+    /// </summary>
+    /// <typeparam name="T">Type of elements.</typeparam>
+    [DebuggerDisplay("Count = {Count}")]
     public class Treap<T> : IEnumerable, IEnumerable<T>
     {
         private readonly IComparer<T> _comparer;
-
         private readonly Random _random;
         private Node? _root;
         private int _version;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Treap{T}"/> class.
+        /// </summary>
         public Treap()
             : this((IComparer<T>?)null)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Treap{T}"/> class that is empty and is sorted according to the specified <see cref="IComparer{T}"/> interface.
+        /// </summary>
+        /// <param name="comparer">The <see cref="IComparer{T}"/> implementation to use when comparing elements.</param>
         public Treap(IComparer<T>? comparer)
         {
             _comparer = comparer ?? Comparer<T>.Default;
@@ -23,9 +35,25 @@ namespace System.Collections.Algorithms
             _version = 0;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Treap{T}"/> class that contains elements copied from a specified enumerable collection..
+        /// </summary>
+        /// <param name="collection">The enumerable collection to be copied.</param>
         public Treap(IEnumerable<T> collection)
-            : this((IComparer<T>?)null)
+            : this(collection, (IComparer<T>)null)
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Treap{T}"/>  class that contains elements copied from a specified enumerable collection and that uses a specified comparer.
+        /// </summary>
+        /// <param name="collection">The enumerable collection to be copied.</param>
+        /// <param name="comparer">The default comparer to use for comparing objects</param>
+        public Treap(IEnumerable<T> collection, IComparer<T>? comparer)
+            : this(comparer)
+        {
+            if (collection is null)
+                throw new ArgumentNullException(nameof(collection));
             T[] elements = collection.ToArray();
             int count = elements.Length;
             if (count > 0)
@@ -35,47 +63,102 @@ namespace System.Collections.Algorithms
             }
         }
 
+        /// <summary>
+        /// Gets the number of elements in the <see cref="Treap{T}"/>.
+        /// </summary>
+        /// <remarks>
+        /// Retrieving the value of this property is an O(1) operation.
+        /// </remarks>
         public int Count => GetCount(_root);
 
-        public void Add(T item, int? prior = null)
+        /// <summary>
+        /// Adds an element to the treap.
+        /// </summary>
+        /// <remarks>
+        /// Adding element is O(logN) operation.
+        /// The <see cref="Treap{T}"/> class does accept duplicate elements.
+        /// </remarks>
+        /// <param name="item">The element to add to the set.</param>
+        public void Add(T item)
         {
-            var toAdd = new Node(item, prior ?? _random.Next());
+            var toAdd = new Node(item, _random.Next());
             _version++;
             Insert(ref _root, toAdd);
         }
 
+        /// <summary>
+        /// Removes a specified item from the <see cref="Treap{T}"/>.
+        /// </summary>
+        /// <param name="item">The element to remove.</param>
+        /// <returns><see langword="true"/> if the element is found and successfully removed; otherwise, <see langword="false"/>.</returns>
+        /// <remarks>
+        /// If the <see cref="Treap{T} "/> object does not contain the specified element, the object remains unchanged and no exception is thrown.
+        /// item can be null for reference types.
+        /// This method is an O(log n) operation.
+        /// </remarks>
         public bool Remove(T item)
         {
-            if (item is null)
-                throw new ArgumentNullException(nameof(item));
             if (_root is null)
                 return false;
-            _version++;
             return Erase(ref _root, item);
         }
 
+        /// <summary>
+        /// Removes all elements from the set.
+        /// </summary>
+        /// <remarks> This method is an O(1) operation.</remarks>
         public void Clear()
         {
             _root = null;
             _version++;
         }
 
+        /// <summary>
+        /// Merge other <see cref="Treap{T} "/> into current one and clear other treap.
+        /// </summary>
+        /// <param name="other">Treap to be merged in.</param>
+        /// <remarks> This method is O(Mlog(N/M)) operation.</remarks>
+        public void MergeIn(Treap<T> other)
+        {
+            _root = Unite(_root, other._root);
+            other.Clear();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the <see cref="Treap{T}"/>.
+        /// </summary>
+        /// <returns>An enumerator that iterates through the <see cref="Treap{T}"/> in sorted order.</returns>
+        /// <remarks>
+        /// An enumerator remains valid as long as the collection remains unchanged. If changes are made to the collection, such as adding, modifying, or deleting elements, the enumerator is irrecoverably invalidated and the next call to <see cref="Treap{T}.Enumerator.MoveNext"/> or <see cref="IEnumerator.Reset"/> throws an <see cref="InvalidOperationException"/>.
+        /// This method is an O(log n) operation.
+        /// </remarks>
         public Enumerator GetEnumerator() => new Enumerator(this);
 
+        /// <inheritdoc/>
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
 
+        /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+        /// <summary>
+        /// Gets the element at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to get.</param>
+        /// <returns>The element at the specified index.</returns>
         public T this[int index]
         {
             get
             {
-                if (index < 0 || GetCount(_root) < index)
+                if (index < 0 || GetCount(_root) <= index)
                     throw new ArgumentOutOfRangeException(nameof(index));
                 return GetKthElement(index);
             }
         }
 
+        /// <summary>
+        /// Returns an IEnumerable<T> that iterates over the <see cref="Treap{T}"/> in reverse order.
+        /// </summary>
+        /// <returns>An enumerator that iterates over the <see cref="Treap{T}"/> in reverse order.</returns>
         public IEnumerable<T> Reverse()
         {
             Enumerator e = new Enumerator(this, reverse: true);
@@ -85,6 +168,11 @@ namespace System.Collections.Algorithms
             }
         }
 
+        /// <summary>
+        /// Determines whether the <see cref="Treap{T}"/> contains a specific element.
+        /// </summary>
+        /// <param name="item">The element to locate in the <see cref="Treap{T}"/>.</param>
+        /// <returns><see langword="true"/> if the set contains <paramref name="item"/>; otherwise, <see langword="false"/>.</returns>
         public bool Contains(T item)
         {
             if (_root is null)
@@ -100,6 +188,7 @@ namespace System.Collections.Algorithms
                 else
                     current = current.Right;
             }
+
             return false;
         }
 
@@ -125,7 +214,6 @@ namespace System.Collections.Algorithms
 
         private void UpdateCount(Node? current)
         {
-
             if (current != null)
                 current.Size = GetCount(current.Left) + GetCount(current.Right) + 1;
         }
@@ -137,24 +225,24 @@ namespace System.Collections.Algorithms
             return current.Size;
         }
 
-        private void Split(Node? current, T key, ref Node? L, ref Node? R)
+        private void Split(Node? current, T key, ref Node? left, ref Node? rigth)
         {
             if (current is null)
             {
-                L = null;
-                R = null;
+                left = null;
+                rigth = null;
+            }
+            else if (_comparer.Compare(key, current.Value) == -1)
+            {
+                Split(current.Left, key, ref left, ref current.Left);
+                rigth = current;
             }
             else
-                if (_comparer.Compare(key, current.Value) == -1)
             {
-                Split(current.Left, key, ref L, ref current.Left);
-                R = current;
+                Split(current.Right, key, ref current.Right, ref rigth);
+                left = current;
             }
-            else
-            {
-                Split(current.Right, key, ref current.Right, ref R);
-                L = current;
-            }
+
             UpdateCount(current);
         }
 
@@ -187,6 +275,7 @@ namespace System.Collections.Algorithms
             var result = _comparer.Compare(current.Value, key);
             if (result == 0)
             {
+                _version++;
                 Merge(ref current, current.Left, current.Right);
                 return true;
             }
@@ -197,7 +286,8 @@ namespace System.Collections.Algorithms
                     success = Erase(ref current.Left, key);
                 else
                     success = Erase(ref current.Right, key);
-                UpdateCount(current);
+                if (success)
+                    UpdateCount(current);
                 return success;
             }
         }
@@ -221,6 +311,7 @@ namespace System.Collections.Algorithms
             Split(right, left.Value, ref tempLeft, ref tempRight);
             left.Left = Unite(left.Left, tempLeft);
             left.Right = Unite(left.Right, tempRight);
+            UpdateCount(left);
             return left;
         }
 
@@ -280,7 +371,9 @@ namespace System.Collections.Algorithms
                     current = current.Right;
                 }
                 else
+                {
                     current = current.Left;
+                }
             }
 
             return result;
@@ -303,15 +396,68 @@ namespace System.Collections.Algorithms
             }
         }
 
+        /// <summary>
+        /// Enumerates the elements of a <see cref="Treap{T}"/> object.
+        /// </summary>
         public struct Enumerator : IEnumerator<T>, IEnumerator
         {
             private readonly Treap<T> _treap;
             private readonly int _version;
 
             private readonly Stack<Node> _stack;
-            private Node? _current;
 
             private readonly bool _reverse;
+            private Node? _current;
+
+            /// <summary>
+            /// Gets the element at the current position of the enumerator.
+            /// </summary>
+            public T Current
+            {
+                get
+                {
+                    if (_current != null)
+                    {
+                        return _current.Value;
+                    }
+
+                    return default; // Should only happen when accessing Current is undefined behavior
+                }
+            }
+
+            /// <inheritdoc/>
+            public bool MoveNext()
+            {
+                // Make sure that the underlying subset has not been changed since
+                if (_version != _treap._version)
+                {
+                    throw new InvalidOperationException("Treap changed during enumeration.");
+                }
+
+                if (_stack.Count == 0)
+                {
+                    _current = null;
+                    return false;
+                }
+
+                _current = _stack.Pop();
+                Node? node = _reverse ? _current.Left : _current.Right;
+                Node? next;
+                while (node != null)
+                {
+                    next = _reverse ? node.Right : node.Left;
+                    _stack.Push(node);
+                    node = next;
+                }
+
+                return true;
+            }
+
+            public void Dispose()
+            {
+            }
+
+            void IEnumerator.Reset() => Reset();
 
             internal Enumerator(Treap<T> treap)
                 : this(treap, reverse: false)
@@ -350,53 +496,13 @@ namespace System.Collections.Algorithms
                 Node? next;
                 while (node != null)
                 {
-                    next = (_reverse ? node.Right : node.Left);
-                    _stack.Push(node);
-                    node = next;
-                }
-            }
-
-            public bool MoveNext()
-            {
-                // Make sure that the underlying subset has not been changed since
-                if (_version != _treap._version)
-                {
-                    throw new InvalidOperationException("Treap changed during enumeration.");
-                }
-
-                if (_stack.Count == 0)
-                {
-                    _current = null;
-                    return false;
-                }
-
-                _current = _stack.Pop();
-                Node? node = _reverse ? _current.Left : _current.Right;
-                Node? next;
-                while (node != null)
-                {
                     next = _reverse ? node.Right : node.Left;
                     _stack.Push(node);
                     node = next;
                 }
-
-                return true;
             }
 
-            public void Dispose() { }
-
-            public T Current
-            {
-                get
-                {
-                    if (_current != null)
-                    {
-                        return _current.Value;
-                    }
-                    return default(T)!; // Should only happen when accessing Current is undefined behavior
-                }
-            }
-
+            /// <inheritdoc/>
             object? IEnumerator.Current
             {
                 get
@@ -421,7 +527,6 @@ namespace System.Collections.Algorithms
                 Initialize();
             }
 
-            void IEnumerator.Reset() => Reset();
         }
     }
 }

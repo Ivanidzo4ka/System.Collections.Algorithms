@@ -8,7 +8,6 @@
     /// </summary>
     /// <typeparam name="TKey">Type of key in queue.</typeparam>
     /// <typeparam name="TValue">Type of the value in the queue.</typeparam>
-    [Serializable]
     [DebuggerTypeProxy(typeof(PriorityQueueDebugView<,>))]
     [DebuggerDisplay("Count = {Count}")]
     public class PriorityQueue<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IEnumerable, IReadOnlyCollection<KeyValuePair<TKey, TValue>>

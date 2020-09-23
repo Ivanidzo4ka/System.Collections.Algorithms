@@ -1,7 +1,6 @@
 using System.Collections.Algorithms;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using Xunit;
 
 namespace System.Collection.Algorithms.Tests
@@ -162,39 +161,6 @@ namespace System.Collection.Algorithms.Tests
                 Assert.True(queue.Peek().Key >= previous);
                 previous = queue.Dequeue().Key;
             }
-        }
-
-        [Fact]
-        public void GivenEmptyQueueWhenSerializedThenCanBeDeserialized()
-        {
-            var queue = new PriorityQueue<int, int>();
-            BinaryFormatter binaryFormatter = new BinaryFormatter();
-            using (MemoryStream ms = new MemoryStream())
-            {
-                binaryFormatter.Serialize(ms, queue);
-                ms.Flush();
-                ms.Position = 0;
-                queue = (PriorityQueue<int, int>)binaryFormatter.Deserialize(ms);
-            }
-            Assert.NotNull(queue);
-        }
-
-        [Fact]
-        public void GivenNonEmptyQueueWhenSerializedThenCanBeDeserialized()
-        {
-            var queue = new PriorityQueue<int, int>(new Dictionary<int, int>() { { 1, 1 } });
-            BinaryFormatter binaryFormatter = new BinaryFormatter();
-            using (MemoryStream ms = new MemoryStream())
-            {
-                binaryFormatter.Serialize(ms, queue);
-                ms.Flush();
-                ms.Position = 0;
-                queue = (PriorityQueue<int, int>)binaryFormatter.Deserialize(ms);
-            }
-            Assert.NotNull(queue);
-            Assert.Equal(1, queue.Peek().Key);
-            Assert.Equal(1, queue.Peek().Value);
-            Assert.Single(queue);
         }
 
         [Fact]
