@@ -8,7 +8,6 @@
     /// </summary>
     /// <typeparam name="TKey">Type of key in queue.</typeparam>
     /// <typeparam name="TValue">Type of the value in the queue.</typeparam>
-    [Serializable]
     [DebuggerTypeProxy(typeof(PriorityQueueDebugView<,>))]
     [DebuggerDisplay("Count = {Count}")]
     public class PriorityQueue<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IEnumerable, IReadOnlyCollection<KeyValuePair<TKey, TValue>>
@@ -269,7 +268,7 @@
         }
 
         [Serializable]
-        public sealed class KeyComparer : Comparer<TKey>
+        internal sealed class KeyComparer : Comparer<TKey>
         {
             // Do not rename (binary serialization)
             internal IComparer<TKey> keyComparer;
