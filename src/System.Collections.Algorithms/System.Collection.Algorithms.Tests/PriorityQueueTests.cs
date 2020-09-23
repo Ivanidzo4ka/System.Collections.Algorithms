@@ -1,7 +1,6 @@
 using System.Collections.Algorithms;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using Xunit;
 
 namespace System.Collection.Algorithms.Tests
@@ -165,36 +164,25 @@ namespace System.Collection.Algorithms.Tests
         }
 
         [Fact]
-        public void GivenEmptyQueueWhenSerializedThenCanBeDeserialized()
+        public void GivenQueueWithElementWhenCallContainsValueForElementThenReturnsTrue()
         {
-            var queue = new PriorityQueue<int, int>();
-            BinaryFormatter binaryFormatter = new BinaryFormatter();
-            using (MemoryStream ms = new MemoryStream())
-            {
-                binaryFormatter.Serialize(ms, queue);
-                ms.Flush();
-                ms.Position = 0;
-                queue = (PriorityQueue<int, int>)binaryFormatter.Deserialize(ms);
-            }
-            Assert.NotNull(queue);
+            var queue = new PriorityQueue<int, int>(new Dictionary<int, int>() { { 0, 1 } });
+            Assert.True(queue.ContainsValue(1));
         }
 
         [Fact]
-        public void GivenNonEmptyQueueWhenSerializedThenCanBeDeserialized()
+        public void GivenQueueWithNoElementWhenCallContainsValueForElementThenReturnsFalse()
         {
-            var queue = new PriorityQueue<int, int>(new Dictionary<int, int>() { { 1, 1 } });
-            BinaryFormatter binaryFormatter = new BinaryFormatter();
-            using (MemoryStream ms = new MemoryStream())
-            {
-                binaryFormatter.Serialize(ms, queue);
-                ms.Flush();
-                ms.Position = 0;
-                queue = (PriorityQueue<int, int>)binaryFormatter.Deserialize(ms);
-            }
-            Assert.NotNull(queue);
-            Assert.Equal(1, queue.Peek().Key);
-            Assert.Equal(1, queue.Peek().Value);
-            Assert.Single(queue);
+            var queue = new PriorityQueue<int, int>(new Dictionary<int, int>() { { 0, 1 } });
+            Assert.False(queue.ContainsValue(0));
+        }
+
+        [Fact]
+        public void GivenQueueWithElementWhenCallRemoveValueForElementThenReturnsTrue()
+        {
+            var queue = new PriorityQueue<int, int>(new Dictionary<int, int>() { { 0, 1 } });
+            Assert.True(queue.Remove(1));
+            Assert.Empty(queue);
         }
 
         [Fact]
