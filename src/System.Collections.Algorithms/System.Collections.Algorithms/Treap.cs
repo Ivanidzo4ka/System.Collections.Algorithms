@@ -476,17 +476,6 @@
             /// <inheritdoc/>
             void IEnumerator.Reset() => Reset();
 
-            private void Reset()
-            {
-                if (_version != _treap._version)
-                {
-                    throw new InvalidOperationException("Treap changed during enumeration.");
-                }
-
-                _stack.Clear();
-                Initialize();
-            }
-
             private static int Log2(int value)
             {
                 int result = 0;
@@ -497,6 +486,17 @@
                 }
 
                 return result;
+            }
+
+            private void Reset()
+            {
+                if (_version != _treap._version)
+                {
+                    throw new InvalidOperationException("Treap changed during enumeration.");
+                }
+
+                _stack.Clear();
+                Initialize();
             }
 
             private void Initialize()

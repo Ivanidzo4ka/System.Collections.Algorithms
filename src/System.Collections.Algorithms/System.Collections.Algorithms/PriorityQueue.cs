@@ -235,6 +235,7 @@
         /// <summary>
         /// Converts priority queue into <see cref="KeyValuePair{TKey, TValue}[]"/>.
         /// </summary>
+        /// <returns>Array of elements.</returns>
         internal KeyValuePair<TKey, TValue>[] ToArray() => _data.ToArray();
 
         private void ThrowForEmptyQueue()

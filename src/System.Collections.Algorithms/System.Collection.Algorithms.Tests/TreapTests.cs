@@ -196,11 +196,17 @@ namespace System.Collection.Algorithms.Tests
         {
             var treap = new Treap<double>();
             var rand = new Random();
-            for (int i = 0; i < 10_000_000; i++)
+            for (int i = 0; i < 100_000; i++)
             {
                 treap.Add(rand.NextDouble());
             }
-            treap.Contains(rand.NextDouble());
+
+            var previous = double.MinValue;
+            foreach (var item in treap)
+            {
+                Assert.True(previous <= item);
+                previous = item;
+            }
         }
     }
 }

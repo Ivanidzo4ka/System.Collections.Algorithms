@@ -1,6 +1,5 @@
 using System.Collections.Algorithms;
 using System.Collections.Generic;
-using System.IO;
 using Xunit;
 
 namespace System.Collection.Algorithms.Tests
