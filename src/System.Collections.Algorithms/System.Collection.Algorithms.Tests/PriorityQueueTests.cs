@@ -184,27 +184,5 @@ namespace System.Collection.Algorithms.Tests
             Assert.True(queue.Remove(1));
             Assert.Empty(queue);
         }
-
-        [Fact]
-        public void GivenQueueWithElementWhenCallContainsValueForElementThenReturnsTrue()
-        {
-            var queue = new PriorityQueue<int, int>(new Dictionary<int, int>() { { 0, 1 } });
-            Assert.True(queue.ContainsValue(1));
-        }
-
-        [Fact]
-        public void GivenQueueWithNoElementWhenCallContainsValueForElementThenReturnsFalse()
-        {
-            var queue = new PriorityQueue<int, int>(new Dictionary<int, int>() { { 0, 1 } });
-            Assert.False(queue.ContainsValue(0));
-        }
-
-        [Fact]
-        public void GivenQueueWithElementWhenCallRemoveValueForElementThenReturnsTrue()
-        {
-            var queue = new PriorityQueue<int, int>(new Dictionary<int, int>() { { 0, 1 } });
-            Assert.True(queue.Remove(1));
-            Assert.Empty(queue);
-        }
     }
 }
