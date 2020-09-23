@@ -12,7 +12,7 @@
     [DebuggerDisplay("Count = {Count}")]
     public class PriorityQueue<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IEnumerable, IReadOnlyCollection<KeyValuePair<TKey, TValue>>
     {
-        private readonly Comparer<TKey> _comparer;
+        private readonly IComparer<TKey> _comparer;
         private readonly List<KeyValuePair<TKey, TValue>> _data;
 
         /// <summary>
@@ -20,7 +20,7 @@
         /// Creates default priority queue. Minumum elements are on top of queue.
         /// </summary>
         public PriorityQueue()
-            : this((IComparer<TKey>)null)
+            : this(comparer: null)
         {
         }
 
@@ -40,7 +40,7 @@
         /// <param name="comparer">Comparer to manage order of the keys.</param>
         public PriorityQueue(IComparer<TKey>? comparer)
         {
-            _comparer = new KeyComparer(comparer);
+            _comparer = comparer ?? Comparer<TKey>.Default;
             _data = new List<KeyValuePair<TKey, TValue>>();
         }
 
@@ -51,7 +51,7 @@
         /// <param name="comparer">Comparer to manage order of the keys.</param>
         public PriorityQueue(int capacity, IComparer<TKey>? comparer)
         {
-            _comparer = new KeyComparer(comparer);
+            _comparer = comparer ?? Comparer<TKey>.Default;
             _data = new List<KeyValuePair<TKey, TValue>>(capacity);
         }
 
@@ -182,7 +182,7 @@
         /// <summary>
         /// Determines whether the <see cref="PriorityQueue{TKey,TValue}"/> contains a specific value.
         /// </summary>
-        /// <param name="value">The value to locate in the <see cref="PriorityQueue{TKey,TValue}"/>. The value can be null for reference types</param>
+        /// <param name="value">The value to locate in the <see cref="PriorityQueue{TKey,TValue}"/>. The value can be null for reference types.</param>
         /// <returns><see langword="true"/> if the <see cref="PriorityQueue{TKey,TValue}"/> contains an element with the specified value; otherwise, <see langword="false"/>.</returns>
         public bool ContainsValue(TValue value)
         {
@@ -199,7 +199,7 @@
         /// Removes the first element with the specified value from the <see cref="PriorityQueue{TKey,TValue}"/>.
         /// </summary>
         /// <param name="value">The element to remove.</param>
-        /// <returns><see langword="true"/> if the element is successfully removed; otherwise, <see langword="false"/>. This method also returns <see langword="false"/> if key was not found in the original <see cref="PriorityQueue{TKey,TValue}".</returns>
+        /// <returns><see langword="true"/> if the element is successfully removed; otherwise, <see langword="false"/>. This method also returns <see langword="false"/> if key was not found in the original <see cref="PriorityQueue{TKey,TValue}"/>.</returns>
         public bool Remove(TValue value)
         {
             int pos;
@@ -220,8 +220,6 @@
             return false;
         }
 
-        public KeyValuePair<TKey, TValue>[] ToArray() => _data.ToArray();
-
         /// <summary>
         /// Returns an enumerator that iterates through the <see cref="PriorityQueue{TKey,TValue}"/>.
         /// </summary>
@@ -233,6 +231,11 @@
         /// </summary>
         /// <returns>An enumerator for the contents of the  <see cref="PriorityQueue{TKey,TValue}"/>.</returns>
         IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => _data.GetEnumerator();
+
+        /// <summary>
+        /// Converts priority queue into <see cref="KeyValuePair{TKey, TValue}[]"/>.
+        /// </summary>
+        internal KeyValuePair<TKey, TValue>[] ToArray() => _data.ToArray();
 
         private void ThrowForEmptyQueue()
         {
@@ -264,30 +267,6 @@
                 _data[position] = _data[largestChild];
                 _data[largestChild] = temp;
                 position = largestChild;
-            }
-        }
-
-        [Serializable]
-        internal sealed class KeyComparer : Comparer<TKey>
-        {
-            // Do not rename (binary serialization)
-            internal IComparer<TKey> keyComparer;
-
-            public KeyComparer(IComparer<TKey>? keyComparer)
-            {
-                if (keyComparer == null)
-                {
-                    this.keyComparer = Comparer<TKey>.Default;
-                }
-                else
-                {
-                    this.keyComparer = keyComparer;
-                }
-            }
-
-            public override int Compare(TKey x, TKey y)
-            {
-                return keyComparer.Compare(x, y);
             }
         }
 

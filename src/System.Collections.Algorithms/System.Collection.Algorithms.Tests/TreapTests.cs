@@ -190,5 +190,17 @@ namespace System.Collection.Algorithms.Tests
             Assert.Equal(0, second.Count);
             Assert.Equal(a.OrderBy(i => i), first);
         }
+
+        [Fact]
+        public void GivenLotOfRandomDataWhenStuffTreapThenItWorks()
+        {
+            var treap = new Treap<double>();
+            var rand = new Random();
+            for (int i = 0; i < 10_000_000; i++)
+            {
+                treap.Add(rand.NextDouble());
+            }
+            treap.Contains(rand.NextDouble());
+        }
     }
 }

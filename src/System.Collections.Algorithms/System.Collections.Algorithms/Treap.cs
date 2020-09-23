@@ -40,7 +40,7 @@
         /// </summary>
         /// <param name="collection">The enumerable collection to be copied.</param>
         public Treap(IEnumerable<T> collection)
-            : this(collection, (IComparer<T>)null)
+            : this(collection, null)
         {
         }
 
@@ -48,7 +48,7 @@
         /// Initializes a new instance of the <see cref="Treap{T}"/>  class that contains elements copied from a specified enumerable collection and that uses a specified comparer.
         /// </summary>
         /// <param name="collection">The enumerable collection to be copied.</param>
-        /// <param name="comparer">The default comparer to use for comparing objects</param>
+        /// <param name="comparer">The default comparer to use for comparing objects.</param>
         public Treap(IEnumerable<T> collection, IComparer<T>? comparer)
             : this(comparer)
         {
@@ -70,6 +70,21 @@
         /// Retrieving the value of this property is an O(1) operation.
         /// </remarks>
         public int Count => GetCount(_root);
+
+        /// <summary>
+        /// Gets the element at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to get.</param>
+        /// <returns>The element at the specified index.</returns>
+        public T this[int index]
+        {
+            get
+            {
+                if (index < 0 || GetCount(_root) <= index)
+                    throw new ArgumentOutOfRangeException(nameof(index));
+                return GetKthElement(index);
+            }
+        }
 
         /// <summary>
         /// Adds an element to the treap.
@@ -141,22 +156,7 @@
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <summary>
-        /// Gets the element at the specified index.
-        /// </summary>
-        /// <param name="index">The zero-based index of the element to get.</param>
-        /// <returns>The element at the specified index.</returns>
-        public T this[int index]
-        {
-            get
-            {
-                if (index < 0 || GetCount(_root) <= index)
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                return GetKthElement(index);
-            }
-        }
-
-        /// <summary>
-        /// Returns an IEnumerable<T> that iterates over the <see cref="Treap{T}"/> in reverse order.
+        /// Returns an <see cref="IEnumerable{T}"/> that iterates over the <see cref="Treap{T}"/> in reverse order.
         /// </summary>
         /// <returns>An enumerator that iterates over the <see cref="Treap{T}"/> in reverse order.</returns>
         public IEnumerable<T> Reverse()
@@ -379,23 +379,6 @@
             return result;
         }
 
-        internal class Node
-        {
-            public readonly T Value;
-            public int Prior;
-            public int Size;
-            public Node? Left;
-            public Node? Right;
-
-            public Node(T value, int prior, Node? left = null, Node? right = null)
-            {
-                Value = value;
-                Prior = prior;
-                Left = left;
-                Right = right;
-            }
-        }
-
         /// <summary>
         /// Enumerates the elements of a <see cref="Treap{T}"/> object.
         /// </summary>
@@ -410,6 +393,24 @@
             private Node? _current;
 
             /// <summary>
+            /// Initializes a new instance of the <see cref="Enumerator"/> struct.
+            /// </summary>
+            /// <param name="treap">Treap to iterate.</param>
+            /// <param name="reverse">Should be in reverse order or not.</param>
+            internal Enumerator(Treap<T> treap, bool reverse = false)
+            {
+                _treap = treap;
+                _version = treap._version;
+
+                // 2 log(n + 1) is the maximum height.
+                _stack = new Stack<Node>((2 * Log2(treap.Count)) + 1);
+                _current = null;
+                _reverse = reverse;
+
+                Initialize();
+            }
+
+            /// <summary>
             /// Gets the element at the current position of the enumerator.
             /// </summary>
             public T Current
@@ -422,6 +423,20 @@
                     }
 
                     return default; // Should only happen when accessing Current is undefined behavior
+                }
+            }
+
+            /// <inheritdoc/>
+            object? IEnumerator.Current
+            {
+                get
+                {
+                    if (_current == null)
+                    {
+                        throw new InvalidOperationException("Something went terrible wrong.");
+                    }
+
+                    return _current.Value;
                 }
             }
 
@@ -453,27 +468,22 @@
                 return true;
             }
 
+            /// <inheritdoc/>
             public void Dispose()
             {
             }
 
+            /// <inheritdoc/>
             void IEnumerator.Reset() => Reset();
 
-            internal Enumerator(Treap<T> treap)
-                : this(treap, reverse: false)
+            private void Reset()
             {
-            }
+                if (_version != _treap._version)
+                {
+                    throw new InvalidOperationException("Treap changed during enumeration.");
+                }
 
-            internal Enumerator(Treap<T> treap, bool reverse)
-            {
-                _treap = treap;
-                _version = treap._version;
-
-                // 2 log(n + 1) is the maximum height.
-                _stack = new Stack<Node>((2 * Log2(treap.Count)) + 1);
-                _current = null;
-                _reverse = reverse;
-
+                _stack.Clear();
                 Initialize();
             }
 
@@ -501,32 +511,23 @@
                     node = next;
                 }
             }
+        }
 
-            /// <inheritdoc/>
-            object? IEnumerator.Current
+        private class Node
+        {
+            public readonly T Value;
+            public int Prior;
+            public int Size;
+            public Node? Left;
+            public Node? Right;
+
+            public Node(T value, int prior, Node? left = null, Node? right = null)
             {
-                get
-                {
-                    if (_current == null)
-                    {
-                        throw new InvalidOperationException("Something went terrible wrong.");
-                    }
-
-                    return _current.Value;
-                }
+                Value = value;
+                Prior = prior;
+                Left = left;
+                Right = right;
             }
-
-            internal void Reset()
-            {
-                if (_version != _treap._version)
-                {
-                    throw new InvalidOperationException("Treap changed during enumeration.");
-                }
-
-                _stack.Clear();
-                Initialize();
-            }
-
         }
     }
 }
