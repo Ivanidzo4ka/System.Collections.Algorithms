@@ -8,3 +8,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("StyleCop.CSharp.LayoutRules", "SA1503:Braces should not be omitted", Justification = "I don't like single line braces.", Scope = "namespaceanddescendants", Target = "System.Collections.Algorithms")]
 [assembly: SuppressMessage("StyleCop.CSharp.NamingRules", "SA1309:Field names should not begin with underscore", Justification = "I prefer underscore to this.", Scope = "namespaceanddescendants", Target = "System.Collections.Algorithms")]
 [assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1101:Prefix local calls with this", Justification = "I prefer underscore to this.", Scope = "namespaceanddescendants", Target = "System.Collections.Algorithms")]
+[assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1633:File should have header", Justification = "I need to come up with header first.", Scope = "namespace", Target = "~N:System.Collections.Algorithms")]

@@ -422,7 +422,7 @@
                         return _current.Value;
                     }
 
-                    return default; // Should only happen when accessing Current is undefined behavior
+                    return default!; // Should only happen when accessing Current is undefined behavior
                 }
             }
 
