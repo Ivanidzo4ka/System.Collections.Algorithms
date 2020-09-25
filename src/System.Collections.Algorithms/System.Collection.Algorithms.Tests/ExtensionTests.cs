@@ -118,6 +118,21 @@ namespace System.Collection.Algorithms.Tests
         }
 
         [Fact]
+        public void GivenArrayAndComparerWhenFindKthElementThenSameAsKthElementInSortedArray()
+        {
+            var comparer = Comparer<int>.Create((x, y) => y.CompareTo(x));
+            var data = new int[] { 4, 1, 8, 4, 3, 9, 6, 7, 7, 10, 2 };
+            var sortedData = new int[data.Length];
+            Array.Copy(data, sortedData, data.Length);
+            Array.Sort(sortedData, comparer);
+            for (int i = 0; i < data.Length; i++)
+            {
+                var d = data.KthElement(i, comparer);
+                Assert.Equal(sortedData[i], d);
+            }
+        }
+
+        [Fact]
         public void GivenArrayWehnFindKthElementThenArrayDidntChanged()
         {
             var data = new int[] { 4, 1, 8, 4, 3, 9, 6 };
@@ -144,6 +159,29 @@ namespace System.Collection.Algorithms.Tests
                 for (int i = 0; i < data.Length; i++)
                 {
                     var d = data.KthElement(i);
+                    Assert.Equal(sortedData[i], d);
+                }
+            }
+        }
+
+        [Fact]
+        public void GivenMultipleRandomDataAndComparerWhenFindKthElementThenSameAsKthElementInSortedArray()
+        {
+            var comparer = Comparer<int>.Create((x, y) => y.CompareTo(x));
+            var rand = new Random();
+            var n = 100;
+            var loops = 1000;
+            var data = new int[n];
+            var sortedData = new int[n];
+            for (int loop = 0; loop < loops; loop++)
+            {
+                for (int i = 0; i < n; i++)
+                    data[i] = rand.Next();
+                Array.Copy(data, sortedData, data.Length);
+                Array.Sort(sortedData, comparer);
+                for (int i = 0; i < data.Length; i++)
+                {
+                    var d = data.KthElement(i, comparer);
                     Assert.Equal(sortedData[i], d);
                 }
             }

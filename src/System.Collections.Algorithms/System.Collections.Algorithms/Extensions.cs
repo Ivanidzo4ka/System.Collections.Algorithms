@@ -1,22 +1,51 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace System.Collections.Algorithms
+﻿namespace System.Collections.Algorithms
 {
+    using System.Collections.Generic;
+    using System.Linq;
+
+    /// <summary>
+    /// Class providing extended functionality for already existing structures.
+    /// </summary>
     public static class Extensions
     {
-        public static void Swap<T>(this IList<T> array, int left, int right)
+        /// <summary>
+        /// Swap objects in array.
+        /// </summary>
+        /// <typeparam name="T">Type of objects in array.</typeparam>
+        /// <param name="array">Array to operate on.</param>
+        /// <param name="first">Index of first element to be swaped.</param>
+        /// <param name="second">Index of second element to be swaped.</param>
+        public static void Swap<T>(this IList<T> array, int first, int second)
         {
-            T temp = array[left];
-            array[left] = array[right];
-            array[right] = temp;
+            T temp = array[first];
+            array[first] = array[second];
+            array[second] = temp;
         }
 
+        /// <summary>
+        /// Partition array into two parts, first part contains values less than element, second half start with element and contains rest of array.
+        /// </summary>
+        /// <typeparam name="T">Type of objects in array.</typeparam>
+        /// <param name="array">Array to operate on.</param>
+        /// <param name="index">The starting index of range to partition.</param>
+        /// <param name="lenght">The number of objects in array to partition.</param>
+        /// <param name="element">Element in array to parition on.</param>
+        /// <returns>Position of element in partitioned array.</returns>
         public static int Partition<T>(this IList<T> array, int index, int lenght, T element)
         {
             return array.Partition(index, lenght, element, Comparer<T>.Default);
         }
 
+        /// <summary>
+        /// Partition array into two parts, first part contains values less for which specified <see cref="IComparer{T}"/> returns -1, second half start with element and contains rest of array.
+        /// </summary>
+        /// <typeparam name="T">Type of objects in array.</typeparam>
+        /// <param name="array">Array to operate on.</param>
+        /// <param name="index">The starting index of range to partition.</param>
+        /// <param name="lenght">The number of objects in array to partition.</param>
+        /// <param name="element">Element in array to parition on.</param>
+        /// <param name="comparer">The <see cref="IComparer{T}"/> implementation to use when comparing elements.</param>
+        /// <returns>Position of element in partitioned array.</returns>
         public static int Partition<T>(this IList<T> array, int index, int lenght, T element, IComparer<T> comparer)
         {
             int i;
@@ -25,6 +54,9 @@ namespace System.Collections.Algorithms
                 if (comparer.Compare(array[i], element) == 0)
                     break;
             }
+
+            if (comparer.Compare(array[i], element) != 0)
+                throw new ArgumentOutOfRangeException(nameof(element));
 
             array.Swap(i, index + lenght - 1);
             i = index;
@@ -41,15 +73,33 @@ namespace System.Collections.Algorithms
             return i;
         }
 
+        /// <summary>
+        /// Returns k-th object in enumeration if enumeration been sorted.
+        /// </summary>
+        /// <typeparam name="T">Type of objects in array.</typeparam>
+        /// <param name="data">Data to find k-th object.</param>
+        /// <param name="k">K. Zero based, shouldn't exceed size of enumeration.</param>
+        /// <returns>K-th object in enumeration.</returns>
         public static T KthElement<T>(this IEnumerable<T> data, int k)
         {
             var array = data.ToArray();
             return KthElement(array, 0, array.Length - 1, k, Comparer<T>.Default);
         }
 
+        /// <summary>
+        /// Finds k-th object in enumeration if enumeration been sorted according to <see cref="IComparer{T}"/>.
+        /// </summary>
+        /// <typeparam name="T">Type of objects in array.</typeparam>
+        /// <param name="data">Data to find k-th object.</param>
+        /// <param name="k">K. Zero based, shouldn't exceed size of enumeration.</param>
+        /// <param name="comparer">The <see cref="IComparer{T}"/> implementation to use when comparing elements.</param>
+        /// <returns>K-th object in enumeration.</returns>
+        /// <remarks>Finding k-th object is O(n) operation.</remarks>
         public static T KthElement<T>(this IEnumerable<T> data, int k, IComparer<T> comparer)
         {
             var array = data.ToArray();
+            if (k < 0 || k >= array.Length)
+                throw new ArgumentOutOfRangeException(nameof(k));
             return KthElement(array, 0, array.Length - 1, k, comparer);
         }
 
@@ -74,7 +124,7 @@ namespace System.Collections.Algorithms
 
             T medianOfMedians = (i == 1) ? medians[i - 1] :
                                 KthElement(medians, 0, i - 1, i / 2, comparer);
-            int pos = Partition(array, left, n, medianOfMedians);
+            int pos = Partition(array, left, n, medianOfMedians, comparer);
 
             if (pos - left == k)
                 return array[pos];
