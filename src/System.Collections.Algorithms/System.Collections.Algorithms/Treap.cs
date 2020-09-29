@@ -9,7 +9,7 @@
     /// </summary>
     /// <typeparam name="T">Type of elements.</typeparam>
     [DebuggerDisplay("Count = {Count}")]
-    public class Treap<T> : IEnumerable, IEnumerable<T>
+    public class Treap<T> : IEnumerable, IEnumerable<T>, IReadOnlyCollection<T>
     {
         private readonly IComparer<T> _comparer;
         private readonly Random _random;
@@ -135,6 +135,9 @@
         /// <remarks> This method is O(Mlog(N/M)) operation.</remarks>
         public void MergeIn(Treap<T> other)
         {
+            if (other.Count == 0)
+                return;
+            _version++;
             _root = Unite(_root, other._root);
             other.Clear();
         }
