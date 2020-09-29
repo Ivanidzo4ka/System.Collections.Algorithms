@@ -135,7 +135,7 @@ namespace System.Collections.Algorithms.Tests
         [Fact]
         public void GivenTreeWhenUpdateElementThenQueuedReflectsChanges()
         {
-            int size = 1_000_000;
+            int size = 100;
             Func<int, int, int> add = (a, b) => a + b;
             var updatedTree = new SqrtTree<int>(Enumerable.Range(1, size), add);
             var canonicalTree = new SqrtTree<int>(Enumerable.Range(1, size), add);
