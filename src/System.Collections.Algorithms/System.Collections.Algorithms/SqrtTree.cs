@@ -9,7 +9,7 @@
         private List<T[]> _suffix;
         private List<T[]> _between;
         private List<int> _layers;
-        private int[] _onLayers;
+        private int[] _innerTreeLayers;
         private T[] _data;
         private int _originalSize;
         private int _log;
@@ -18,22 +18,61 @@
         private Func<T, T, T> _operation;
 
         public SqrtTree(int capacity, Func<T, T, T> operation)
+            : this(CapacityCheck(capacity), operation)
         {
-            if (capacity <= 0 || capacity > 1 >> 30)
-                throw new ArgumentOutOfRangeException(nameof(capacity));
-            Initilize(new T[capacity], operation);
         }
 
-        public SqrtTree(IEnumerable<T> data, Func<T, T, T> operation)
+        public SqrtTree(IEnumerable<T> collection, Func<T, T, T> operation)
+        : this(ConvertFromIEnumerable(collection), operation)
         {
-            if (data is null)
-                throw new ArgumentNullException(nameof(data));
+        }
+
+        public SqrtTree(T[] collection, Func<T, T, T> operation)
+        {
+            if (collection is null)
+                throw new ArgumentNullException(nameof(collection));
             if (operation is null)
                 throw new ArgumentNullException(nameof(operation));
-            var arrray = data.ToArray();
-            if (arrray.Length == 0)
-                throw new ArgumentException(nameof(data), "Is empty");
-            Initilize(arrray, operation);
+            _data = collection;
+            _originalSize = _data.Length;
+            _operation = operation;
+            _log = Utils.Log2(_data.Length);
+            _innerTreeLayers = new int[_log + 1];
+
+            var tmp = _log;
+            _layers = new List<int>();
+            while (tmp > 1)
+            {
+                _innerTreeLayers[tmp] = _layers.Count;
+                _layers.Add(tmp);
+                tmp = (tmp + 1) >> 1;
+            }
+
+            for (int i = _log - 1; i >= 0; i--)
+            {
+                _innerTreeLayers[i] = Math.Max(_innerTreeLayers[i], _innerTreeLayers[i + 1]);
+            }
+
+            int betweenLayers = Math.Max(0, _layers.Count - 1);
+            int blockSizeLog = (_log + 1) >> 1;
+            int blockSize = 1 << blockSizeLog;
+            _indexSize = (_data.Length + blockSize - 1) >> blockSizeLog;
+
+            Array.Resize(ref _data, _data.Length + _indexSize);
+
+            _prefix = new List<T[]>(_layers.Count);
+            for (int i = 0; i < _layers.Count; i++)
+                _prefix.Add(new T[_data.Length]);
+
+            _suffix = new List<T[]>(_layers.Count);
+            for (int i = 0; i < _layers.Count; i++)
+                _suffix.Add(new T[_data.Length]);
+
+            _between = new List<T[]>(betweenLayers);
+            for (int i = 0; i < betweenLayers; i++)
+                _between.Add(new T[(1 << _log) + blockSize]);
+
+            Build(0, 0, _originalSize, 0);
         }
 
         public T this[int index]
@@ -70,50 +109,6 @@
                 return Query(left, right, 0, 0);
             else
                 return Query(right, left, 0, 0);
-        }
-
-        // change it to be constuctor.
-        private void Initilize(T[] data, Func<T, T, T> operation)
-        {
-            _originalSize = _data.Length;
-            _operation = operation;
-            _log = Utils.Log2(_data.Length);
-            _onLayers = new int[_log + 1];
-
-            var tlg = _log;
-            _layers = new List<int>();
-            while (tlg > 1)
-            {
-                _onLayers[tlg] = _layers.Count;
-                _layers.Add(tlg);
-                tlg = (tlg + 1) >> 1;
-            }
-
-            for (int i = _log - 1; i >= 0; i--)
-            {
-                _onLayers[i] = Math.Max(_onLayers[i], _onLayers[i + 1]);
-            }
-
-            int betweenLayers = Math.Max(0, _layers.Count - 1);
-            int blockSizeLog = (_log + 1) >> 1;
-            int blockSize = 1 << blockSizeLog;
-            _indexSize = (_data.Length + blockSize - 1) >> blockSizeLog;
-
-            Array.Resize(ref _data, _data.Length + _indexSize);
-
-            _prefix = new List<T[]>(_layers.Count);
-            for (int i = 0; i < _layers.Count; i++)
-                _prefix.Add(new T[_data.Length]);
-
-            _suffix = new List<T[]>(_layers.Count);
-            for (int i = 0; i < _layers.Count; i++)
-                _suffix.Add(new T[_data.Length]);
-
-            _between = new List<T[]>(betweenLayers);
-            for (int i = 0; i < betweenLayers; i++)
-                _between.Add(new T[(1 << _log) + blockSize]);
-
-            Build(0, 0, _originalSize, 0);
         }
 
         private void BuildBlock(int layer, int left, int right)
@@ -178,7 +173,7 @@
             }
         }
 
-        private T Query(int left, int right, int betweenOffest, int offset)
+        private T Query(int left, int right, int betweenOffset, int offset)
         {
             if (left == right)
                 return _data[left];
@@ -186,7 +181,7 @@
                 return _operation(_data[left], _data[right]);
             var diff = (left - offset) ^ (right - offset);
 
-            int layer = _onLayers[diff == 0 ? 0 : Utils.Log2(diff + 1)];
+            int layer = _innerTreeLayers[diff == 0 ? 0 : Utils.Log2(diff + 1)];
             int blockSizeLog = (_layers[layer] + 1) >> 1;
             int blockCountLog = _layers[layer] >> 1;
             int leftPos = (((left - offset) >> _layers[layer]) << _layers[layer]) + offset;
@@ -195,10 +190,9 @@
             T result = _suffix[layer][left];
             if (leftBlock <= rightBlock)
             {
-                T add = layer == 0 ?
-                    Query(_originalSize + leftBlock, _originalSize + rightBlock, (1 << _log) - _originalSize, _originalSize)
-                :
-                    _between[layer - 1][betweenOffest + leftPos + (leftBlock << blockCountLog) + rightBlock];
+                T add = layer == 0
+                    ? Query(_originalSize + leftBlock, _originalSize + rightBlock, (1 << _log) - _originalSize, _originalSize)
+                    : _between[layer - 1][betweenOffset + leftPos + (leftBlock << blockCountLog) + rightBlock];
                 result = _operation(result, add);
             }
 
@@ -214,13 +208,13 @@
             int blockSize = 1 << blockSizeLog;
             int blockIndex = (indexOffset - left) >> blockSizeLog;
             int leftPos = left + (blockIndex << blockSizeLog);
-            int rightPos = Math.Min(left + blockSize, right);
+            int rightPos = Math.Min(leftPos + blockSize, right);
             BuildBlock(layer, leftPos, rightPos);
             if (layer == 0)
                 UpdateBetweenZero(blockIndex);
             else
                 BuildBetween(layer, left, right, betweenOffset);
-            Update(layer + 1, left, right, betweenOffset, indexOffset);
+            Update(layer + 1, leftPos, rightPos, betweenOffset, indexOffset);
         }
 
         private void UpdateBetweenZero(int blockIndex)
@@ -228,6 +222,23 @@
             int blockSizeLog = (_log + 1) >> 1;
             _data[_originalSize + blockIndex] = _suffix[0][blockIndex << blockSizeLog];
             Update(1, _originalSize, _originalSize + _indexSize, (1 << _log) - _originalSize, _originalSize + blockIndex);
+        }
+
+        private static T[] CapacityCheck(int capacity)
+        {
+            if (capacity <= 0 || capacity > 1 << 30)
+                throw new ArgumentOutOfRangeException(nameof(capacity));
+            return new T[capacity];
+        }
+
+        private static T[] ConvertFromIEnumerable(IEnumerable<T> collection)
+        {
+            if (collection is null)
+                throw new ArgumentNullException(nameof(collection));
+            var data = collection.ToArray();
+            if (data.Length == 0)
+                throw new ArgumentException(nameof(collection), "Is empty");
+            return data;
         }
     }
 }
