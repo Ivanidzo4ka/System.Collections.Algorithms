@@ -402,8 +402,8 @@
                 _treap = treap;
                 _version = treap._version;
 
-                // 2 log(n + 1) is the maximum height.
-                _stack = new Stack<Node>((2 * Log2(treap.Count)) + 1);
+                // log(n) is the average height of heap.
+                _stack = new Stack<Node>(Utils.Log2(treap.Count));
                 _current = null;
                 _reverse = reverse;
 
@@ -475,18 +475,6 @@
 
             /// <inheritdoc/>
             void IEnumerator.Reset() => Reset();
-
-            private static int Log2(int value)
-            {
-                int result = 0;
-                while (value > 0)
-                {
-                    result++;
-                    value >>= 1;
-                }
-
-                return result;
-            }
 
             private void Reset()
             {

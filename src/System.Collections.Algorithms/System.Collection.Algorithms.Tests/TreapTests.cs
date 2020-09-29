@@ -1,9 +1,8 @@
-﻿using System.Collections.Algorithms;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
-namespace System.Collection.Algorithms.Tests
+namespace System.Collections.Algorithms.Tests
 {
     public class TreapTests
     {

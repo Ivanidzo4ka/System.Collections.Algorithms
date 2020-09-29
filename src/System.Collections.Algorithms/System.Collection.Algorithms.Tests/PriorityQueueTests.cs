@@ -1,8 +1,7 @@
-using System.Collections.Algorithms;
 using System.Collections.Generic;
 using Xunit;
 
-namespace System.Collection.Algorithms.Tests
+namespace System.Collections.Algorithms.Tests
 {
     public class PriorityQueueTests
     {
