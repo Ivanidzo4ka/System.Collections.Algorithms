@@ -3,9 +3,10 @@ Purpose of this repository is to bring set of collections into .Net world so peo
 
 Implemented:
 - Priority queue
+- Treap
+- Sqrt tree
 
 Would be nice to have:
-- Treap 
 - Trie
 - Segment tree
 - Randomize heap

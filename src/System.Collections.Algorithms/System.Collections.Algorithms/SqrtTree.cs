@@ -7,6 +7,10 @@
     {
         private List<T[]> _prefix;
         private List<T[]> _suffix;
+
+        // TODO:
+        // Maybe it should be collection of sparse arrays.
+        // First few layers have about 65% of zeros.
         private List<T[]> _between;
         private List<int> _layers;
         private int[] _innerTreeLayers;
