@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Collections.Algorithms;
 using Xunit;
 
-namespace System.Collection.Algorithms.Tests
+namespace System.Collections.Algorithms.Tests
 {
-    public class ExtensionTests
+    public class ExtensionsTests
     {
         [Fact]
         public void GivenArrayWhenPartitionByElementThenAllElementSmallersThanElementInLeftPart()

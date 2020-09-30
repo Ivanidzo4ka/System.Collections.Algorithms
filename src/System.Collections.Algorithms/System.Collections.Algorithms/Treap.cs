@@ -9,7 +9,7 @@
     /// </summary>
     /// <typeparam name="T">Type of elements.</typeparam>
     [DebuggerDisplay("Count = {Count}")]
-    public class Treap<T> : IEnumerable, IEnumerable<T>
+    public class Treap<T> : IEnumerable, IEnumerable<T>, IReadOnlyCollection<T>
     {
         private readonly IComparer<T> _comparer;
         private readonly Random _random;
@@ -135,6 +135,9 @@
         /// <remarks> This method is O(Mlog(N/M)) operation.</remarks>
         public void MergeIn(Treap<T> other)
         {
+            if (other.Count == 0)
+                return;
+            _version++;
             _root = Unite(_root, other._root);
             other.Clear();
         }
@@ -402,8 +405,8 @@
                 _treap = treap;
                 _version = treap._version;
 
-                // 2 log(n + 1) is the maximum height.
-                _stack = new Stack<Node>((2 * Log2(treap.Count)) + 1);
+                // log(n) is the average height of heap.
+                _stack = new Stack<Node>(Utils.Log2(treap.Count));
                 _current = null;
                 _reverse = reverse;
 
@@ -475,18 +478,6 @@
 
             /// <inheritdoc/>
             void IEnumerator.Reset() => Reset();
-
-            private static int Log2(int value)
-            {
-                int result = 0;
-                while (value > 0)
-                {
-                    result++;
-                    value >>= 1;
-                }
-
-                return result;
-            }
 
             private void Reset()
             {
