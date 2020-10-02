@@ -3,8 +3,8 @@
     public class VebTree32
     {
         private int _k;
-        uint _min;
-        uint _max;
+        private uint _min;
+        private uint _max;
         private VebTree32[] _clusters;
         private VebTree32 _summary;
 
@@ -18,40 +18,65 @@
             }
         }
 
-        public void Insert(uint x)
+        public uint Min => _min;
+
+        public uint Max => _max;
+
+        public bool Empty => _min == TreeLimit;
+
+        public uint TreeLimit => 1U << _k;
+
+        public bool Add(uint x)
         {
             if (Empty)
             {
                 _max = x;
                 _min = x;
+                return true;
             }
-
-            if (x < _min)
+            else if (_min == _max)
             {
-                (x, _min) = (_min, x);
+                if (_min == x)
+                    return false;
+                if (_min < x)
+                    _max = x;
+                else
+                    _min = x;
+                return true;
             }
-
-            if (x > _max)
-                _max = x;
-            if (_k != 1)
+            else
             {
-                var high = High(x);
-                var low = Low(x);
-                if (_clusters[high] == null)
+                if (_min == x || _max == x)
+                    return false;
+                bool added = false;
+                if (_min > x)
                 {
-                    _clusters[high] = new VebTree32(_k >> 1);
-
+                    (_min, x) = (x, _min);
+                    added = true;
                 }
-                if (_clusters[high].Empty)
+                if (_max < x)
                 {
-                    if (_summary == null)
+                    (_max, x) = (x, _max);
+                    added = true;
+                }
+
+                if (_k != 1)
+                {
+                    var high = High(x);
+                    var low = Low(x);
+                    if (_clusters[high] == null)
                     {
-                        _summary = new VebTree32(_k >> 1);
+                        _clusters[high] = new VebTree32(_k >> 1);
+                    }
+                    if (_clusters[high].Empty)
+                    {
+                        _summary = _summary ?? new VebTree32(_k >> 1);
+                        _summary.Add(high);
                     }
 
-                    _summary.Insert(high);
+                    return _clusters[high].Add(low);
                 }
-                _clusters[high].Insert(low);
+                return added;
             }
         }
 
@@ -72,75 +97,139 @@
             }
         }
 
-        public uint GetNext(uint x)
+        public bool TryGetNext(uint x, out uint result)
         {
-            if (_min <= x)
-                return _min;
-            if (Empty || x > _max)
-                return 1U << _k;
-            if (_k == 1)
-            {
-                return _max == x ? x : 1U << _k;
-            }
-
-            var high = High(x);
-            var low = Low(x);
-            if (_clusters[high] != null && low <= _clusters[high]._max)
-            {
-                return Merge(high, _clusters[high].GetNext(low));
-            }
-            else if (_summary != null)
-            {
-                var nextHigh = _summary.GetNext(high + 1);
-                if (nextHigh != (1U << (_k >> 1)))
-                    return Merge(nextHigh, _clusters[nextHigh]._min);
-
-            }
-
-            return 1U << _k;
+            var (found, ans) = GetNext(x);
+            result = ans;
+            return found;
         }
 
-        public void Remove(uint x)
+        public bool TryGetPrev(uint x, out uint result)
         {
-            if (_min == TreeLimit)
-                return;
-            if (x < _min || x > _max)
-                return;
+            var (found, ans) = GetPrev(x);
+            result = ans;
+            return found;
+        }
+
+        public bool Remove(uint x)
+        {
             if (_min == x && _max == x)
             {
-                _min = 1U << _k;
+                _min = TreeLimit;
                 _max = 0;
-                return;
+                return true;
+            }
+
+            if (_min == x)
+            {
+                if (_summary == null || _summary.Empty)
+                {
+                    _min = _max;
+                    return true;
+                }
+
+                x = Merge(_summary._min, _clusters[_summary._min]._min);
+                _min = x;
+            }
+
+            if (_max == x)
+            {
+                if (_summary == null || _summary.Empty)
+                {
+                    _max = _min;
+                    return true;
+                }
+                else
+                {
+                    x = Merge(_summary._max, _clusters[_summary._max]._max);
+                    _max = x;
+                }
+            }
+
+            if (_summary == null || _summary.Empty)
+                return false;
+            var high = High(x);
+            var low = Low(x);
+            var removed = _clusters[high].Remove(low);
+            if (_clusters[high].Empty)
+            {
+                _summary.Remove(high);
+                _clusters[high] = default;
+            }
+            return removed;
+        }
+
+        private (bool, uint) GetNext(uint x)
+        {
+            if (Empty || _max <= x)
+            {
+                return (false, TreeLimit);
+            }
+
+            if (_min > x)
+            {
+                return (true, _min);
+            }
+
+            if (_summary == null || _summary.Empty)
+            {
+                return (true, _max);
             }
             else
             {
+
                 var high = High(x);
                 var low = Low(x);
-                if (_min == x)
+                if (_clusters[high] != null && !_clusters[high].Empty && _clusters[high]._max > low)
                 {
-                    if (_summary != null && _summary._min != (1U << (_k >> 1)))
-                    {
-                        var y = _clusters[_summary._min]._min;
-                        _min = y;
-                    }
+                    var (_, result) = _clusters[high].GetNext(low);
+                    return (true, Merge(high, result));
                 }
-                if (_clusters[high] != null)
+                else
                 {
-                    _clusters[high].Remove(low);
-                    if (_clusters[high]._min == TreeLimit)
-                        _summary.Remove(high);
-                    if (x == _max)
-                    {
-                        var y = _summary._max;
-                        if (_summary.Empty)
-                            _max = _min;
-                        else
-                            _max = Merge(y, _clusters[y]._max);
-                    }
+                    var (hasHigh, nextHigh) = _summary.GetNext(high);
+                    if (!hasHigh)
+                        return (true, _max);
+                    else
+                        return (true, Merge(nextHigh, _clusters[nextHigh]._min));
                 }
-                else if (x == _max)
-                { _max = Merge(high, _clusters[high]._max); }
+            }
+        }
 
+        private (bool, uint) GetPrev(uint x)
+        {
+            if (Empty || _min >= x)
+            {
+                return (false, 0);
+            }
+
+            if (_max < x)
+            {
+                return (true, _max);
+            }
+
+            if (_summary == null || _summary.Empty)
+            {
+                return (true, _min);
+            }
+            else
+            {
+
+                var high = High(x);
+                var low = Low(x);
+                if (_clusters[high] != null && !_clusters[high].Empty && _clusters[high]._min < low)
+                {
+                    var (_, result) = _clusters[high].GetPrev(low);
+                    return (true, Merge(high, result));
+                }
+                else
+                {
+                    var (hasHigh, nextHigh) = _summary.GetPrev(high);
+                    if (!hasHigh)
+                        return (true, _min);
+                    else
+                        return (true, Merge(nextHigh, _clusters[nextHigh]._max));
+                }
             }
         }
 
@@ -150,8 +239,5 @@
 
         private uint Merge(uint high, uint low) => (high << (_k >> 1)) + low;
 
-        private bool Empty => _min == TreeLimit;
-
-        private uint TreeLimit => 1U << _k;
     }
 }
