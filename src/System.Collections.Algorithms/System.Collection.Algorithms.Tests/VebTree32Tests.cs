@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Security.Cryptography.X509Certificates;
+using Xunit;
 
 namespace System.Collections.Algorithms.Tests
 {
@@ -157,6 +158,31 @@ namespace System.Collections.Algorithms.Tests
                 var toRemove = (1 << 4) - 1 - i;
                 tree.Remove(toRemove);
                 Assert.False(tree.Find(toRemove));
+            }
+        }
+
+        [Fact]
+        public void GivenRandomFilledTreeWhenRemoveThenMatchesArrayState()
+        {
+            for (int randIter = 0; randIter < 1000; randIter++)
+            {
+                var tree = new VebTree32(8);
+                var rand = new Random();
+                var arr = new bool[1 << 8];
+                for (int i = 0; i < 1 << 7; i++)
+                {
+                    var elem = (uint)rand.Next(1 << 8);
+                    arr[elem] = true;
+                    tree.Add(elem);
+                }
+
+                for (int i = 0; i < 1 << 7; i++)
+                {
+                    var elem = (uint)rand.Next(1 << 8);
+                    Assert.Equal(arr[elem], tree.Remove(elem));
+                    arr[elem] = false;
+                }
+
             }
         }
     }

@@ -76,6 +76,7 @@
 
                     return _clusters[high].Add(low);
                 }
+
                 return added;
             }
         }
@@ -113,6 +114,8 @@
 
         public bool Remove(uint x)
         {
+            if (Empty)
+                return false;
             if (_min == x && _max == x)
             {
                 _min = TreeLimit;
@@ -150,11 +153,12 @@
                 return false;
             var high = High(x);
             var low = Low(x);
+            if (_clusters[high] == null)
+                return false;
             var removed = _clusters[high].Remove(low);
             if (_clusters[high].Empty)
             {
                 _summary.Remove(high);
-                _clusters[high] = default;
             }
             return removed;
         }
