@@ -1,35 +1,22 @@
 ﻿namespace System.Collections.Algorithms
 {
     /// <summary>
-    /// Van Emde Boas tree for dimensionality of <see cref="uint"/>.
+    /// Van Emde Boas tree for dimensionality of <see cref="byte"/>.
     /// </summary>
-    public class VebTree32
+    public class VebTree8
     {
-        private int _k;
-        private VebTree32?[] _clusters;
-        private VebTree32? _summary;
+        private VebTree4?[] _clusters;
+        private VebTree4? _summary;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VebTree32"/> class.
+        /// Initializes a new instance of the <see cref="VebTree8"/> class.
         /// </summary>
-        public VebTree32()
-            : this(32)
+        public VebTree8()
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="VebTree32"/> class for k dimensionality.
-        /// Creates tree for K diminsionality.
-        /// </summary>
-        /// <param name="k">Defines dimensionality of tree. Must be power of 2.</param>
-        internal VebTree32(int k)
-        {
-            _k = k;
-            Min = 1U << k;
-            if (k != 1)
-            {
-                _clusters = new VebTree32[1 << (k >> 1)];
-            }
+            Min = byte.MaxValue;
+            Max = byte.MinValue;
+            Count = 0;
+            _clusters = new VebTree4[1 << 4];
         }
 
         /// <summary>
@@ -37,25 +24,28 @@
         /// </summary>
         /// <remarks>
         /// This is O(1) operation.
-        /// In case if tree empty returns <see cref="uint.MaxValue"/>.
+        /// In case if tree empty returns <see cref="byte.MaxValue"/>.
         /// </remarks>
-        public uint Min { get; private set; }
+        public byte Min { get; private set; }
 
         /// <summary>
         /// Gets maximum element in a tree.
         /// </summary>
         /// <remarks>
         /// This is O(1) operation.
-        /// In case if tree empty returns <see cref="uint.MinValue"/>.
+        /// In case if tree empty returns <see cref="byte.MinValue"/>.
         /// </remarks>
-        public uint Max { get; private set; }
+        public byte Max { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether this tree empty or not.
         /// </summary>
-        public bool Empty => Min == TreeLimit;
+        public bool Empty => Count == 0;
 
-        private uint TreeLimit => 1U << _k;
+        /// <summary>
+        /// Gets the number of items that are contained in a <see cref="VebTree8"/>.
+        /// </summary>
+        public ushort Count { get; private set; }
 
         /// <summary>
         /// Adds item to <see cref="VebTree32"/>.
@@ -65,12 +55,13 @@
         /// </remarks>
         /// <param name="item">Item to add to <see cref="VebTree32"/>.</param>
         /// <returns><see langword="true"/> if item been added, and <see langword="false"/> if <see cref="VebTree32"/> already had such item.</returns>
-        public bool Add(uint item)
+        public bool Add(byte item)
         {
             if (Empty)
             {
                 Max = item;
                 Min = item;
+                Count++;
                 return true;
             }
             else if (Min == Max)
@@ -81,53 +72,49 @@
                     Max = item;
                 else
                     Min = item;
+                Count++;
                 return true;
             }
             else
             {
                 if (Min == item || Max == item)
                     return false;
-                bool added = false;
                 if (Min > item)
                 {
                     (Min, item) = (item, Min);
-                    added = true;
                 }
 
                 if (Max < item)
                 {
                     (Max, item) = (item, Max);
-                    added = true;
                 }
 
-                if (_k != 1)
+                var high = High(item);
+                var low = Low(item);
+                var cluster = _clusters[high] ?? new VebTree4();
+                if (cluster.Empty)
                 {
-                    var high = High(item);
-                    var low = Low(item);
-                    VebTree32 cluster = _clusters[high] ?? new VebTree32(_k >> 1);
-                    if (cluster.Empty)
-                    {
-                        _summary = _summary ?? new VebTree32(_k >> 1);
-                        _summary.Add(high);
-                    }
-
-                    added = cluster.Add(low);
-                    _clusters[high] = cluster;
+                    _summary = _summary ?? new VebTree4();
+                    _summary.Add(high);
                 }
 
+                var added = cluster.Add(low);
+                _clusters[high] = cluster;
+                if (added)
+                    Count++;
                 return added;
             }
         }
 
         /// <summary>
-        /// Searches for item in <see cref="VebTree32"/>.
+        /// Searches for item in <see cref="VebTree16"/>.
         /// </summary>
         /// <remarks>
         /// This is O(log 32) operation.
         /// </remarks>
-        /// <param name="item">Item to search in <see cref="VebTree32"/>.</param>
+        /// <param name="item">Item to search in <see cref="VebTree16"/>.</param>
         /// <returns><see langword="true"/> if item is present, and <see langword="false"/> if not present.</returns>
-        public bool Find(uint item)
+        public bool Find(byte item)
         {
             if (Empty)
             {
@@ -140,36 +127,29 @@
             }
             else
             {
-                if (_k == 1)
+                var cluster = _clusters[High(item)];
+                if (cluster is null)
                 {
                     return false;
                 }
                 else
                 {
-                    var cluster = _clusters[High(item)];
-                    if (cluster is null)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        return cluster.Find(Low(item));
-                    }
+                    return cluster.Find(Low(item));
                 }
             }
         }
 
         /// <summary>
-        /// Trys to get next value bigger than <paramref name="value"/> in <see cref="VebTree32"/>.
+        /// Trys to get next value bigger than <paramref name="value"/> in <see cref="VebTree16"/>.
         /// </summary>
         /// <remarks>
         /// This is O(log 32) operation.
-        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree32"/>.
+        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree16"/>.
         /// </remarks>
         /// <param name="value">Looking for item bigger than this one.</param>
-        /// <param name="result">Item bigger than <paramref name="value"/>> if it exist, <see cref="uint.MaxValue"/> otherwise.</param>
+        /// <param name="result">Item bigger than <paramref name="value"/>> if it exist, <see cref="byte.MaxValue"/> otherwise.</param>
         /// <returns><see langword="true"/> if such item exist, and <see langword="false"/> if not.</returns>
-        public bool TryGetNext(uint value, out uint result)
+        public bool TryGetNext(byte value, out byte result)
         {
             var (found, ans) = GetNext(value);
             result = ans;
@@ -177,16 +157,16 @@
         }
 
         /// <summary>
-        /// Trys to get next value smaller than <paramref name="value"/> in <see cref="VebTree32"/>.
+        /// Trys to get next value smaller than <paramref name="value"/> in <see cref="VebTree16"/>.
         /// </summary>
         /// <remarks>
         /// This is O(log 32) operation.
-        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree32"/>.
+        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree16"/>.
         /// </remarks>
         /// <param name="value">Looking for item smaller than this one.</param>
-        /// <param name="result">Item smaller than <paramref name="value"/>> if it exist, <see cref="uint.MinValue"/> otherwise.</param>
+        /// <param name="result">Item smaller than <paramref name="value"/>> if it exist, <see cref="byte.MinValue"/> otherwise.</param>
         /// <returns><see langword="true"/> if such item exist, and <see langword="false"/> if not.</returns>
-        public bool TryGetPrevious(uint value, out uint result)
+        public bool TryGetPrevious(byte value, out byte result)
         {
             var (found, ans) = GetPrev(value);
             result = ans;
@@ -199,17 +179,18 @@
         /// <remarks>
         /// This is O(log 32) operation.
         /// </remarks>
-        /// <param name="item">Item to remove from <see cref="VebTree32"/>.</param>
-        /// <returns><see langword="true"/> if item been removed, and <see langword="false"/> if <see cref="VebTree32"/> didn't had it.</returns>
-        public bool Remove(uint item)
+        /// <param name="item">Item to remove from <see cref="VebTree16"/>.</param>
+        /// <returns><see langword="true"/> if item been removed, and <see langword="false"/> if <see cref="VebTree16"/> didn't had it.</returns>
+        public bool Remove(byte item)
         {
             if (Empty)
                 return false;
 
             if (Min == item && Max == item)
             {
-                Min = TreeLimit;
-                Max = 0;
+                Min = byte.MaxValue;
+                Max = byte.MinValue;
+                Count--;
                 return true;
             }
 
@@ -218,8 +199,10 @@
                 if (_summary == null || _summary.Empty)
                 {
                     Min = Max;
+                    Count--;
                     return true;
                 }
+
                 var minCluster = _clusters[_summary.Min];
                 item = Merge(_summary.Min, minCluster!.Min);
                 Min = item;
@@ -230,6 +213,7 @@
                 if (_summary == null || _summary.Empty)
                 {
                     Max = Min;
+                    Count--;
                     return true;
                 }
                 else
@@ -253,15 +237,21 @@
                 _clusters[high] = default;
                 _summary.Remove(high);
             }
-
+            if (removed)
+                Count--;
             return removed;
         }
 
-        private (bool, uint) GetNext(uint x)
+        /// <summary>
+        /// Return next element after <paramref name="x"/>.
+        /// </summary>
+        /// <param name="x">x</param>
+        /// <returns>Tuple where first part is next element exist, and second part is founded element or <see cref="byte.MaxValue"/>.</returns>
+        internal (bool, byte) GetNext(byte x)
         {
             if (Empty || Max <= x)
             {
-                return (false, TreeLimit);
+                return (false, byte.MaxValue);
             }
 
             if (Min > x)
@@ -299,7 +289,12 @@
             }
         }
 
-        private (bool, uint) GetPrev(uint x)
+        /// <summary>
+        /// Return previous element before <paramref name="x"/>.
+        /// </summary>
+        /// <param name="x">x</param>
+        /// <returns>Tuple where first part is next element exist, and second part is founded element or <see cref="byte.MinValue"/>.</returns>
+        internal (bool, byte) GetPrev(byte x)
         {
             if (Empty || Min >= x)
             {
@@ -320,7 +315,7 @@
                 var high = High(x);
                 var low = Low(x);
                 var cluster = _clusters[high];
-                if (_clusters[high] != null && !cluster!.Empty && cluster!.Min < low)
+                if (cluster != null && !cluster!.Empty && cluster!.Min < low)
                 {
                     var (_, result) = cluster!.GetPrev(low);
                     return (true, Merge(high, result));
@@ -341,10 +336,10 @@
             }
         }
 
-        private uint High(uint x) => x >> (_k >> 1);
+        private byte High(byte x) => (byte)(x >> 4);
 
-        private uint Low(uint x) => (uint)(x & ((1 << (_k >> 1)) - 1));
+        private byte Low(byte x) => (byte)(x & ((1 << 4) - 1));
 
-        private uint Merge(uint high, uint low) => (high << (_k >> 1)) + low;
+        private byte Merge(byte high, byte low) => (byte)((high << 4) + low);
     }
 }
