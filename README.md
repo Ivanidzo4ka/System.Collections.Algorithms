@@ -5,6 +5,7 @@ Implemented:
 - Priority queue
 - Treap
 - Sqrt tree
+- Van Emde Boas tree.
 
 Would be nice to have:
 - Trie

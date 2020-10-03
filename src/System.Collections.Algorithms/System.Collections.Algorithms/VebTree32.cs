@@ -1,238 +1,342 @@
 ﻿namespace System.Collections.Algorithms
 {
+    /// <summary>
+    /// Van Emde Boas tree for dimensionality of <see cref="uint"/>.
+    /// </summary>
     public class VebTree32
     {
         private int _k;
-        private uint _min;
-        private uint _max;
-        private VebTree32[] _clusters;
-        private VebTree32 _summary;
+        private VebTree32?[] _clusters;
+        private VebTree32? _summary;
 
-        public VebTree32(int k)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VebTree32"/> class.
+        /// </summary>
+        public VebTree32()
+            : this(32)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VebTree32"/> class for k dimensionality.
+        /// Creates tree for K diminsionality.
+        /// </summary>
+        /// <param name="k">Defines dimensionality of tree. Must be power of 2.</param>
+        internal VebTree32(int k)
         {
             _k = k;
-            _min = 1U << k;
+            Min = 1U << k;
             if (k != 1)
             {
                 _clusters = new VebTree32[1 << (k >> 1)];
             }
         }
 
-        public uint Min => _min;
+        /// <summary>
+        /// Gets minimum element in a tree.
+        /// </summary>
+        /// <remarks>
+        /// This is O(1) operation.
+        /// In case if tree empty returns <see cref="uint.MaxValue"/>.
+        /// </remarks>
+        public uint Min { get; private set; }
 
-        public uint Max => _max;
+        /// <summary>
+        /// Gets maximum element in a tree.
+        /// </summary>
+        /// <remarks>
+        /// This is O(1) operation.
+        /// In case if tree empty returns <see cref="uint.MinValue"/>.
+        /// </remarks>
+        public uint Max { get; private set; }
 
-        public bool Empty => _min == TreeLimit;
+        /// <summary>
+        /// Gets a value indicating whether this tree empty or not.
+        /// </summary>
+        public bool Empty => Min == TreeLimit;
 
-        public uint TreeLimit => 1U << _k;
+        private uint TreeLimit => 1U << _k;
 
-        public bool Add(uint x)
+        /// <summary>
+        /// Adds item to <see cref="VebTree32"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is O(log 32) operation.
+        /// </remarks>
+        /// <param name="item">Item to add to <see cref="VebTree32"/>.</param>
+        /// <returns><see langword="true"/> if item been added, and <see langword="false"/> if <see cref="VebTree32"/> already had such item.</returns>
+        public bool Add(uint item)
         {
             if (Empty)
             {
-                _max = x;
-                _min = x;
+                Max = item;
+                Min = item;
                 return true;
             }
-            else if (_min == _max)
+            else if (Min == Max)
             {
-                if (_min == x)
+                if (Min == item)
                     return false;
-                if (_min < x)
-                    _max = x;
+                if (Min < item)
+                    Max = item;
                 else
-                    _min = x;
+                    Min = item;
                 return true;
             }
             else
             {
-                if (_min == x || _max == x)
+                if (Min == item || Max == item)
                     return false;
                 bool added = false;
-                if (_min > x)
+                if (Min > item)
                 {
-                    (_min, x) = (x, _min);
+                    (Min, item) = (item, Min);
                     added = true;
                 }
-                if (_max < x)
+
+                if (Max < item)
                 {
-                    (_max, x) = (x, _max);
+                    (Max, item) = (item, Max);
                     added = true;
                 }
 
                 if (_k != 1)
                 {
-                    var high = High(x);
-                    var low = Low(x);
-                    if (_clusters[high] == null)
-                    {
-                        _clusters[high] = new VebTree32(_k >> 1);
-                    }
-                    if (_clusters[high].Empty)
+                    var high = High(item);
+                    var low = Low(item);
+                    VebTree32 cluster = _clusters[high] ?? new VebTree32(_k >> 1);
+                    if (cluster.Empty)
                     {
                         _summary = _summary ?? new VebTree32(_k >> 1);
                         _summary.Add(high);
                     }
 
-                    return _clusters[high].Add(low);
+                    added = cluster.Add(low);
+                    _clusters[high] = cluster;
                 }
 
                 return added;
             }
         }
 
-        public bool Find(uint x)
+        /// <summary>
+        /// Searches for item in <see cref="VebTree32"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is O(log 32) operation.
+        /// </remarks>
+        /// <param name="item">Item to search in <see cref="VebTree32"/>.</param>
+        /// <returns><see langword="true"/> if item is present, and <see langword="false"/> if not present.</returns>
+        public bool Find(uint item)
         {
             if (Empty)
+            {
                 return false;
-            if (_min == x || _max == x)
+            }
+
+            if (Min == item || Max == item)
+            {
                 return true;
+            }
             else
             {
                 if (_k == 1)
+                {
                     return false;
+                }
                 else
                 {
-                    return _clusters[High(x)] != null && _clusters[High(x)].Find(Low(x));
+                    var cluster = _clusters[High(item)];
+                    if (cluster is null)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return cluster.Find(Low(item));
+                    }
                 }
             }
         }
 
-        public bool TryGetNext(uint x, out uint result)
+        /// <summary>
+        /// Trys to get next value bigger than <paramref name="value"/> in <see cref="VebTree32"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is O(log 32) operation.
+        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree32"/>.
+        /// </remarks>
+        /// <param name="value">Looking for item bigger than this one.</param>
+        /// <param name="result">Item bigger than <paramref name="value"/>> if it exist, <see cref="uint.MaxValue"/> otherwise.</param>
+        /// <returns><see langword="true"/> if such item exist, and <see langword="false"/> if not.</returns>
+        public bool TryGetNext(uint value, out uint result)
         {
-            var (found, ans) = GetNext(x);
+            var (found, ans) = GetNext(value);
             result = ans;
             return found;
         }
 
-        public bool TryGetPrev(uint x, out uint result)
+        /// <summary>
+        /// Trys to get next value smaller than <paramref name="value"/> in <see cref="VebTree32"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is O(log 32) operation.
+        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree32"/>.
+        /// </remarks>
+        /// <param name="value">Looking for item smaller than this one.</param>
+        /// <param name="result">Item smaller than <paramref name="value"/>> if it exist, <see cref="uint.MinValue"/> otherwise.</param>
+        /// <returns><see langword="true"/> if such item exist, and <see langword="false"/> if not.</returns>
+        public bool TryGetPrevious(uint value, out uint result)
         {
-            var (found, ans) = GetPrev(x);
+            var (found, ans) = GetPrev(value);
             result = ans;
             return found;
         }
 
-        public bool Remove(uint x)
+        /// <summary>
+        /// Remove item from <see cref="VebTree32"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is O(log 32) operation.
+        /// </remarks>
+        /// <param name="item">Item to remove from <see cref="VebTree32"/>.</param>
+        /// <returns><see langword="true"/> if item been removed, and <see langword="false"/> if <see cref="VebTree32"/> didn't had it.</returns>
+        public bool Remove(uint item)
         {
             if (Empty)
                 return false;
-            if (_min == x && _max == x)
+
+            if (Min == item && Max == item)
             {
-                _min = TreeLimit;
-                _max = 0;
+                Min = TreeLimit;
+                Max = 0;
                 return true;
             }
 
-            if (_min == x)
+            if (Min == item)
             {
                 if (_summary == null || _summary.Empty)
                 {
-                    _min = _max;
+                    Min = Max;
                     return true;
                 }
-
-                x = Merge(_summary._min, _clusters[_summary._min]._min);
-                _min = x;
+                var minCluster = _clusters[_summary.Min];
+                item = Merge(_summary.Min, minCluster!.Min);
+                Min = item;
             }
 
-            if (_max == x)
+            if (Max == item)
             {
                 if (_summary == null || _summary.Empty)
                 {
-                    _max = _min;
+                    Max = Min;
                     return true;
                 }
                 else
                 {
-                    x = Merge(_summary._max, _clusters[_summary._max]._max);
-                    _max = x;
+                    var maxCluster = _clusters[_summary.Max];
+                    item = Merge(_summary.Max, maxCluster!.Max);
+                    Max = item;
                 }
             }
 
             if (_summary == null || _summary.Empty)
                 return false;
-            var high = High(x);
-            var low = Low(x);
-            if (_clusters[high] == null)
+            var high = High(item);
+            var low = Low(item);
+            var cluster = _clusters[high];
+            if (cluster == null)
                 return false;
-            var removed = _clusters[high].Remove(low);
-            if (_clusters[high].Empty)
+            var removed = cluster!.Remove(low);
+            if (cluster!.Empty)
             {
+                _clusters[high] = default;
                 _summary.Remove(high);
             }
+
             return removed;
         }
 
         private (bool, uint) GetNext(uint x)
         {
-            if (Empty || _max <= x)
+            if (Empty || Max <= x)
             {
                 return (false, TreeLimit);
             }
 
-            if (_min > x)
+            if (Min > x)
             {
-                return (true, _min);
+                return (true, Min);
             }
 
             if (_summary == null || _summary.Empty)
             {
-                return (true, _max);
+                return (true, Max);
             }
             else
             {
-
                 var high = High(x);
                 var low = Low(x);
-                if (_clusters[high] != null && !_clusters[high].Empty && _clusters[high]._max > low)
+                var cluster = _clusters[high];
+                if (cluster != null && !cluster!.Empty && cluster!.Max > low)
                 {
-                    var (_, result) = _clusters[high].GetNext(low);
+                    var (_, result) = cluster!.GetNext(low);
                     return (true, Merge(high, result));
                 }
                 else
                 {
                     var (hasHigh, nextHigh) = _summary.GetNext(high);
                     if (!hasHigh)
-                        return (true, _max);
+                    {
+                        return (true, Max);
+                    }
                     else
-                        return (true, Merge(nextHigh, _clusters[nextHigh]._min));
+                    {
+                        cluster = _clusters[nextHigh];
+                        return (true, Merge(nextHigh, cluster!.Min));
+                    }
                 }
             }
         }
 
         private (bool, uint) GetPrev(uint x)
         {
-            if (Empty || _min >= x)
+            if (Empty || Min >= x)
             {
                 return (false, 0);
             }
 
-            if (_max < x)
+            if (Max < x)
             {
-                return (true, _max);
+                return (true, Max);
             }
 
             if (_summary == null || _summary.Empty)
             {
-                return (true, _min);
+                return (true, Min);
             }
             else
             {
-
                 var high = High(x);
                 var low = Low(x);
-                if (_clusters[high] != null && !_clusters[high].Empty && _clusters[high]._min < low)
+                var cluster = _clusters[high];
+                if (_clusters[high] != null && !cluster!.Empty && cluster!.Min < low)
                 {
-                    var (_, result) = _clusters[high].GetPrev(low);
+                    var (_, result) = cluster!.GetPrev(low);
                     return (true, Merge(high, result));
                 }
                 else
                 {
-                    var (hasHigh, nextHigh) = _summary.GetPrev(high);
-                    if (!hasHigh)
-                        return (true, _min);
+                    var (hasPrev, nextPrev) = _summary.GetPrev(high);
+                    if (!hasPrev)
+                    {
+                        return (true, Min);
+                    }
                     else
-                        return (true, Merge(nextHigh, _clusters[nextHigh]._max));
+                    {
+                        cluster = _clusters[nextPrev];
+                        return (true, Merge(nextPrev, cluster!.Max));
+                    }
                 }
             }
         }
@@ -242,6 +346,5 @@
         private uint Low(uint x) => (uint)(x & ((1 << (_k >> 1)) - 1));
 
         private uint Merge(uint high, uint low) => (high << (_k >> 1)) + low;
-
     }
 }

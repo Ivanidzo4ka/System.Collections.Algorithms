@@ -68,15 +68,15 @@ namespace System.Collections.Algorithms.Tests
         public void GivenTreapWhenAddingAndRemovingElementsThenCountStaysRight()
         {
             var treap = new Treap<int>();
-            Assert.Equal(0, treap.Count);
+            Assert.Empty(treap);
             treap.Add(4);
-            Assert.Equal(1, treap.Count);
+            Assert.Single(treap);
             treap.Add(1);
             Assert.Equal(2, treap.Count);
             treap.Remove(4);
-            Assert.Equal(1, treap.Count);
+            Assert.Single(treap);
             treap.Remove(1);
-            Assert.Equal(0, treap.Count);
+            Assert.Empty(treap);
         }
 
         [Fact]

@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using Xunit;
+﻿using Xunit;
 
 namespace System.Collections.Algorithms.Tests
 {
@@ -101,6 +100,20 @@ namespace System.Collections.Algorithms.Tests
         }
 
         [Fact]
+        public void GivenEmptyTreeWhenTryGetNextReturnsFalse()
+        {
+            var tree = new VebTree32(8);
+            Assert.False(tree.TryGetNext(0U, out uint _));
+        }
+
+        [Fact]
+        public void GivenEmptyTreeWhenTryGetPrevReturnsFalse()
+        {
+            var tree = new VebTree32(8);
+            Assert.False(tree.TryGetPrevious(0U, out uint _));
+        }
+
+        [Fact]
         public void GivenRandomPopulatedTreeWhenGetPrevReturnsCorrectValue()
         {
             for (int randIter = 0; randIter < 1000; randIter++)
@@ -127,11 +140,11 @@ namespace System.Collections.Algorithms.Tests
                     uint ans;
                     if (j != -1)
                     {
-                        Assert.True(tree.TryGetPrev((uint)i, out ans));
+                        Assert.True(tree.TryGetPrevious((uint)i, out ans));
                         Assert.Equal((uint)j, ans);
                     }
                     else
-                        Assert.False(tree.TryGetPrev((uint)i, out _));
+                        Assert.False(tree.TryGetPrevious((uint)i, out _));
                 }
             }
         }
@@ -185,5 +198,24 @@ namespace System.Collections.Algorithms.Tests
 
             }
         }
+
+        [Fact]
+        public void GivenRandomFilledTreeWhenCallMaxAndMinThenReturnProperValues()
+        {
+            var tree = new VebTree32();
+            var rand = new Random();
+            uint min = uint.MaxValue;
+            uint max = uint.MinValue;
+            for (int i = 0; i < 1000; i++)
+            {
+                var value = (uint)rand.Next();
+                if (min > value) min = value;
+                if (max < value) max = value;
+                tree.Add(value);
+            }
+            Assert.Equal(min, tree.Min);
+            Assert.Equal(max, tree.Max);
+        }
+
     }
 }
