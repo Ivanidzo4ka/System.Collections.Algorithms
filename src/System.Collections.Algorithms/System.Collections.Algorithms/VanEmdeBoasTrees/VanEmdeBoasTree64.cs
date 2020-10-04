@@ -318,7 +318,7 @@
                 var high = High(threshold);
                 var low = Low(threshold);
                 _clusters.TryGetValue(high, out VanEmdeBoasTree32? cluster);
-                if (_clusters[high] != null && !cluster!.Empty && cluster!.Min < low)
+                if (cluster != null && !cluster!.Empty && cluster!.Min < low)
                 {
                     var (_, result) = cluster!.GetPrev(low);
                     return (true, Merge(high, result));
