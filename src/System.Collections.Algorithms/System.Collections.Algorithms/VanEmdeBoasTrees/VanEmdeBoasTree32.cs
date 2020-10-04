@@ -1,23 +1,23 @@
-﻿using System.Collections.Generic;
-
-namespace System.Collections.Algorithms
+﻿namespace System.Collections.Algorithms
 {
+    using System.Collections.Generic;
+
     /// <summary>
     /// Van Emde Boas tree for dimensionality of <see cref="uint"/>.
     /// </summary>
-    public class VebTree32
+    public class VanEmdeBoasTree32
     {
-        private Dictionary<ushort, VebTree16?> _clusters;
-        private VebTree16? _summary;
+        private Dictionary<ushort, VanEmdeBoasTree16?> _clusters;
+        private VanEmdeBoasTree16? _summary;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VebTree32"/> class.
+        /// Initializes a new instance of the <see cref="VanEmdeBoasTree32"/> class.
         /// </summary>
-        public VebTree32()
+        public VanEmdeBoasTree32()
         {
             Min = uint.MaxValue;
             Count = 0;
-            _clusters = new Dictionary<ushort, VebTree16?>();
+            _clusters = new Dictionary<ushort, VanEmdeBoasTree16?>();
         }
 
         /// <summary>
@@ -44,18 +44,18 @@ namespace System.Collections.Algorithms
         public bool Empty => Count == 0;
 
         /// <summary>
-        /// Gets the number of items that are contained in a <see cref="VebTree32"/>.
+        /// Gets the number of items that are contained in a <see cref="VanEmdeBoasTree32"/>.
         /// </summary>
         public ulong Count { get; private set; }
 
         /// <summary>
-        /// Adds item to <see cref="VebTree32"/>.
+        /// Adds item to <see cref="VanEmdeBoasTree32"/>.
         /// </summary>
         /// <remarks>
         /// This is O(log 32) operation.
         /// </remarks>
-        /// <param name="item">Item to add to <see cref="VebTree32"/>.</param>
-        /// <returns><see langword="true"/> if item been added, and <see langword="false"/> if <see cref="VebTree32"/> already had such item.</returns>
+        /// <param name="item">Item to add to <see cref="VanEmdeBoasTree32"/>.</param>
+        /// <returns><see langword="true"/> if item been added, and <see langword="false"/> if <see cref="VanEmdeBoasTree32"/> already had such item.</returns>
         public bool Add(uint item)
         {
             if (Empty)
@@ -92,11 +92,11 @@ namespace System.Collections.Algorithms
 
                 var high = High(item);
                 var low = Low(item);
-                _clusters.TryGetValue(high, out VebTree16? cluster);
-                cluster = cluster ?? new VebTree16();
+                _clusters.TryGetValue(high, out VanEmdeBoasTree16? cluster);
+                cluster = cluster ?? new VanEmdeBoasTree16();
                 if (cluster.Empty)
                 {
-                    _summary = _summary ?? new VebTree16();
+                    _summary = _summary ?? new VanEmdeBoasTree16();
                     _summary.Add(high);
                 }
 
@@ -109,12 +109,12 @@ namespace System.Collections.Algorithms
         }
 
         /// <summary>
-        /// Searches for item in <see cref="VebTree32"/>.
+        /// Searches for item in <see cref="VanEmdeBoasTree32"/>.
         /// </summary>
         /// <remarks>
         /// This is O(log 32) operation.
         /// </remarks>
-        /// <param name="item">Item to search in <see cref="VebTree32"/>.</param>
+        /// <param name="item">Item to search in <see cref="VanEmdeBoasTree32"/>.</param>
         /// <returns><see langword="true"/> if item is present, and <see langword="false"/> if not present.</returns>
         public bool Find(uint item)
         {
@@ -129,7 +129,7 @@ namespace System.Collections.Algorithms
             }
             else
             {
-                _clusters.TryGetValue(High(item), out VebTree16? cluster);
+                _clusters.TryGetValue(High(item), out VanEmdeBoasTree16? cluster);
                 if (cluster is null)
                 {
                     return false;
@@ -142,11 +142,11 @@ namespace System.Collections.Algorithms
         }
 
         /// <summary>
-        /// Trys to get next value bigger than <paramref name="value"/> in <see cref="VebTree32"/>.
+        /// Trys to get next value bigger than <paramref name="value"/> in <see cref="VanEmdeBoasTree32"/>.
         /// </summary>
         /// <remarks>
         /// This is O(log 32) operation.
-        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree32"/>.
+        /// <paramref name="value"/> Doesn't have to be present in <see cref="VanEmdeBoasTree32"/>.
         /// </remarks>
         /// <param name="value">Looking for item bigger than this one.</param>
         /// <param name="result">Item bigger than <paramref name="value"/>> if it exist, <see cref="uint.MaxValue"/> otherwise.</param>
@@ -159,11 +159,11 @@ namespace System.Collections.Algorithms
         }
 
         /// <summary>
-        /// Trys to get next value smaller than <paramref name="value"/> in <see cref="VebTree32"/>.
+        /// Trys to get next value smaller than <paramref name="value"/> in <see cref="VanEmdeBoasTree32"/>.
         /// </summary>
         /// <remarks>
         /// This is O(log 32) operation.
-        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree32"/>.
+        /// <paramref name="value"/> Doesn't have to be present in <see cref="VanEmdeBoasTree32"/>.
         /// </remarks>
         /// <param name="value">Looking for item smaller than this one.</param>
         /// <param name="result">Item smaller than <paramref name="value"/>> if it exist, <see cref="uint.MinValue"/> otherwise.</param>
@@ -176,13 +176,13 @@ namespace System.Collections.Algorithms
         }
 
         /// <summary>
-        /// Remove item from <see cref="VebTree32"/>.
+        /// Remove item from <see cref="VanEmdeBoasTree32"/>.
         /// </summary>
         /// <remarks>
         /// This is O(log 32) operation.
         /// </remarks>
-        /// <param name="item">Item to remove from <see cref="VebTree32"/>.</param>
-        /// <returns><see langword="true"/> if item been removed, and <see langword="false"/> if <see cref="VebTree32"/> didn't had it.</returns>
+        /// <param name="item">Item to remove from <see cref="VanEmdeBoasTree32"/>.</param>
+        /// <returns><see langword="true"/> if item been removed, and <see langword="false"/> if <see cref="VanEmdeBoasTree32"/> didn't had it.</returns>
         public bool Remove(uint item)
         {
             if (Empty)
@@ -230,7 +230,7 @@ namespace System.Collections.Algorithms
                 return false;
             var high = High(item);
             var low = Low(item);
-            _clusters.TryGetValue(high, out VebTree16? cluster);
+            _clusters.TryGetValue(high, out VanEmdeBoasTree16? cluster);
             if (cluster == null)
                 return false;
             var removed = cluster!.Remove(low);
@@ -248,18 +248,18 @@ namespace System.Collections.Algorithms
         }
 
         /// <summary>
-        /// Return next element after <paramref name="x"/>.
+        /// Return first element in <see cref="VanEmdeBoasTree32"/> bigger than <paramref name="threshold"/>.
         /// </summary>
-        /// <param name="x">x</param>
+        /// <param name="threshold">Threshold value.</param>
         /// <returns>Tuple where first part is next element exist, and second part is founded element or <see cref="uint.MaxValue"/>.</returns>
-        internal (bool, uint) GetNext(uint x)
+        internal (bool, uint) GetNext(uint threshold)
         {
-            if (Empty || Max <= x)
+            if (Empty || Max <= threshold)
             {
                 return (false, uint.MaxValue);
             }
 
-            if (Min > x)
+            if (Min > threshold)
             {
                 return (true, Min);
             }
@@ -270,9 +270,9 @@ namespace System.Collections.Algorithms
             }
             else
             {
-                var high = High(x);
-                var low = Low(x);
-                _clusters.TryGetValue(high, out VebTree16? cluster);
+                var high = High(threshold);
+                var low = Low(threshold);
+                _clusters.TryGetValue(high, out VanEmdeBoasTree16? cluster);
                 if (cluster != null && !cluster!.Empty && cluster!.Max > low)
                 {
                     var (_, result) = cluster!.GetNext(low);
@@ -295,18 +295,18 @@ namespace System.Collections.Algorithms
         }
 
         /// <summary>
-        /// Return previous element before <paramref name="x"/>.
+        /// Return last element in <see cref="VanEmdeBoasTree8"/> smaller than <paramref name="threshold"/>.
         /// </summary>
-        /// <param name="x">x</param>
+        /// <param name="threshold">Threshold value.</param>
         /// <returns>Tuple where first part is next element exist, and second part is founded element or <see cref="uint.MinValue"/>.</returns>
-        internal (bool, uint) GetPrev(uint x)
+        internal (bool, uint) GetPrev(uint threshold)
         {
-            if (Empty || Min >= x)
+            if (Empty || Min >= threshold)
             {
                 return (false, 0);
             }
 
-            if (Max < x)
+            if (Max < threshold)
             {
                 return (true, Max);
             }
@@ -317,9 +317,9 @@ namespace System.Collections.Algorithms
             }
             else
             {
-                var high = High(x);
-                var low = Low(x);
-                _clusters.TryGetValue(high, out VebTree16? cluster);
+                var high = High(threshold);
+                var low = Low(threshold);
+                _clusters.TryGetValue(high, out VanEmdeBoasTree16? cluster);
                 if (cluster != null && !cluster!.Empty && cluster!.Min < low)
                 {
                     var (_, result) = cluster!.GetPrev(low);
@@ -343,7 +343,7 @@ namespace System.Collections.Algorithms
 
         private ushort High(uint x) => (ushort)(x >> 16);
 
-        private ushort Low(uint x) => (ushort)(x & ((1 << 16) - 1));
+        private ushort Low(uint x) => (ushort)(x & ushort.MaxValue);
 
         private uint Merge(ushort high, ushort low) => ((uint)high << 16) + low;
     }

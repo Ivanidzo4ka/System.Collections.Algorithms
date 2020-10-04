@@ -3,20 +3,20 @@
     /// <summary>
     /// Van Emde Boas tree for dimensionality of <see cref="byte"/>.
     /// </summary>
-    public class VebTree8
+    public class VanEmdeBoasTree8
     {
-        private VebTree4?[] _clusters;
-        private VebTree4? _summary;
+        private VaneEmdeBoasTree4?[] _clusters;
+        private VaneEmdeBoasTree4? _summary;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VebTree8"/> class.
+        /// Initializes a new instance of the <see cref="VanEmdeBoasTree8"/> class.
         /// </summary>
-        public VebTree8()
+        public VanEmdeBoasTree8()
         {
             Min = byte.MaxValue;
             Max = byte.MinValue;
             Count = 0;
-            _clusters = new VebTree4[1 << 4];
+            _clusters = new VaneEmdeBoasTree4[1 << 4];
         }
 
         /// <summary>
@@ -43,18 +43,18 @@
         public bool Empty => Count == 0;
 
         /// <summary>
-        /// Gets the number of items that are contained in a <see cref="VebTree8"/>.
+        /// Gets the number of items that are contained in a <see cref="VanEmdeBoasTree8"/>.
         /// </summary>
         public ushort Count { get; private set; }
 
         /// <summary>
-        /// Adds item to <see cref="VebTree32"/>.
+        /// Adds item to <see cref="VanEmdeBoasTree32"/>.
         /// </summary>
         /// <remarks>
-        /// This is O(log 32) operation.
+        /// This is O(log 8) operation.
         /// </remarks>
-        /// <param name="item">Item to add to <see cref="VebTree32"/>.</param>
-        /// <returns><see langword="true"/> if item been added, and <see langword="false"/> if <see cref="VebTree32"/> already had such item.</returns>
+        /// <param name="item">Item to add to <see cref="VanEmdeBoasTree8"/>.</param>
+        /// <returns><see langword="true"/> if item been added, and <see langword="false"/> if <see cref="VanEmdeBoasTree8"/> already had such item.</returns>
         public bool Add(byte item)
         {
             if (Empty)
@@ -91,10 +91,10 @@
 
                 var high = High(item);
                 var low = Low(item);
-                var cluster = _clusters[high] ?? new VebTree4();
+                var cluster = _clusters[high] ?? new VaneEmdeBoasTree4();
                 if (cluster.Empty)
                 {
-                    _summary = _summary ?? new VebTree4();
+                    _summary = _summary ?? new VaneEmdeBoasTree4();
                     _summary.Add(high);
                 }
 
@@ -107,12 +107,12 @@
         }
 
         /// <summary>
-        /// Searches for item in <see cref="VebTree16"/>.
+        /// Searches for item in <see cref="VanEmdeBoasTree8"/>.
         /// </summary>
         /// <remarks>
-        /// This is O(log 32) operation.
+        /// This is O(log 8) operation.
         /// </remarks>
-        /// <param name="item">Item to search in <see cref="VebTree16"/>.</param>
+        /// <param name="item">Item to search in <see cref="VanEmdeBoasTree8"/>.</param>
         /// <returns><see langword="true"/> if item is present, and <see langword="false"/> if not present.</returns>
         public bool Find(byte item)
         {
@@ -140,11 +140,11 @@
         }
 
         /// <summary>
-        /// Trys to get next value bigger than <paramref name="value"/> in <see cref="VebTree16"/>.
+        /// Trys to get next value bigger than <paramref name="value"/> in <see cref="VanEmdeBoasTree8"/>.
         /// </summary>
         /// <remarks>
-        /// This is O(log 32) operation.
-        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree16"/>.
+        /// This is O(log 8) operation.
+        /// <paramref name="value"/> Doesn't have to be present in <see cref="VanEmdeBoasTree8"/>.
         /// </remarks>
         /// <param name="value">Looking for item bigger than this one.</param>
         /// <param name="result">Item bigger than <paramref name="value"/>> if it exist, <see cref="byte.MaxValue"/> otherwise.</param>
@@ -157,11 +157,11 @@
         }
 
         /// <summary>
-        /// Trys to get next value smaller than <paramref name="value"/> in <see cref="VebTree16"/>.
+        /// Trys to get next value smaller than <paramref name="value"/> in <see cref="VanEmdeBoasTree8"/>.
         /// </summary>
         /// <remarks>
-        /// This is O(log 32) operation.
-        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree16"/>.
+        /// This is O(log 8) operation.
+        /// <paramref name="value"/> Doesn't have to be present in <see cref="VanEmdeBoasTree8"/>.
         /// </remarks>
         /// <param name="value">Looking for item smaller than this one.</param>
         /// <param name="result">Item smaller than <paramref name="value"/>> if it exist, <see cref="byte.MinValue"/> otherwise.</param>
@@ -174,13 +174,13 @@
         }
 
         /// <summary>
-        /// Remove item from <see cref="VebTree32"/>.
+        /// Remove item from <see cref="VanEmdeBoasTree8"/>.
         /// </summary>
         /// <remarks>
-        /// This is O(log 32) operation.
+        /// This is O(log 8) operation.
         /// </remarks>
-        /// <param name="item">Item to remove from <see cref="VebTree16"/>.</param>
-        /// <returns><see langword="true"/> if item been removed, and <see langword="false"/> if <see cref="VebTree16"/> didn't had it.</returns>
+        /// <param name="item">Item to remove from <see cref="VanEmdeBoasTree8"/>.</param>
+        /// <returns><see langword="true"/> if item been removed, and <see langword="false"/> if <see cref="VanEmdeBoasTree8"/> didn't had it.</returns>
         public bool Remove(byte item)
         {
             if (Empty)
@@ -237,24 +237,25 @@
                 _clusters[high] = default;
                 _summary.Remove(high);
             }
+
             if (removed)
                 Count--;
             return removed;
         }
 
         /// <summary>
-        /// Return next element after <paramref name="x"/>.
+        /// Return first element in <see cref="VanEmdeBoasTree8"/> bigger than <paramref name="threshold"/>.
         /// </summary>
-        /// <param name="x">x</param>
+        /// <param name="threshold">Threshold value.</param>
         /// <returns>Tuple where first part is next element exist, and second part is founded element or <see cref="byte.MaxValue"/>.</returns>
-        internal (bool, byte) GetNext(byte x)
+        internal (bool, byte) GetNext(byte threshold)
         {
-            if (Empty || Max <= x)
+            if (Empty || Max <= threshold)
             {
                 return (false, byte.MaxValue);
             }
 
-            if (Min > x)
+            if (Min > threshold)
             {
                 return (true, Min);
             }
@@ -265,8 +266,8 @@
             }
             else
             {
-                var high = High(x);
-                var low = Low(x);
+                var high = High(threshold);
+                var low = Low(threshold);
                 var cluster = _clusters[high];
                 if (cluster != null && !cluster!.Empty && cluster!.Max > low)
                 {
@@ -290,18 +291,18 @@
         }
 
         /// <summary>
-        /// Return previous element before <paramref name="x"/>.
+        /// Return last element in <see cref="VanEmdeBoasTree8"/> smaller than <paramref name="threshold"/>.
         /// </summary>
-        /// <param name="x">x</param>
+        /// <param name="threshold">Threshold value.</param>
         /// <returns>Tuple where first part is next element exist, and second part is founded element or <see cref="byte.MinValue"/>.</returns>
-        internal (bool, byte) GetPrev(byte x)
+        internal (bool, byte) GetPrev(byte threshold)
         {
-            if (Empty || Min >= x)
+            if (Empty || Min >= threshold)
             {
                 return (false, 0);
             }
 
-            if (Max < x)
+            if (Max < threshold)
             {
                 return (true, Max);
             }
@@ -312,8 +313,8 @@
             }
             else
             {
-                var high = High(x);
-                var low = Low(x);
+                var high = High(threshold);
+                var low = Low(threshold);
                 var cluster = _clusters[high];
                 if (cluster != null && !cluster!.Empty && cluster!.Min < low)
                 {

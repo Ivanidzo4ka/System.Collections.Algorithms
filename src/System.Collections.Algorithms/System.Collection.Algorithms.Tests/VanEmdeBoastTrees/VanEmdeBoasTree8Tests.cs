@@ -2,14 +2,14 @@
 using System.Linq;
 using Xunit;
 
-namespace System.Collections.Algorithms.Tests.VebTree
+namespace System.Collections.Algorithms.Tests.VanEmdeBoasTrees
 {
-    public class VebTree8Tests
+    public class VanEmdeBoasTree8Tests
     {
         [Fact]
         public void GivenVebTreePopulatedWithOddNumbersWhenFindReturnsCorrectValue()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             for (int i = 0; i <= byte.MaxValue; i++)
                 if (i % 2 == 1)
                     tree.Add((byte)i);
@@ -20,7 +20,7 @@ namespace System.Collections.Algorithms.Tests.VebTree
         [Fact]
         public void GivenVebTreePopulatedWithEvenNumbersWhenFindReturnsCorrectValue()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             for (int i = 0; i <= byte.MaxValue; i++)
                 if (i % 2 == 0)
                     tree.Add((byte)i);
@@ -31,7 +31,7 @@ namespace System.Collections.Algorithms.Tests.VebTree
         [Fact]
         public void GivenEmptyVebTreeWhenFindThenAlwaysReturnFalse()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             var rand = new Random();
             for (int i = 0; i <= byte.MaxValue; i++)
             {
@@ -43,7 +43,7 @@ namespace System.Collections.Algorithms.Tests.VebTree
         [Fact]
         public void GivenTreeWhenPopulateItThenCountReturnsAmountOfAddedElements()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             Assert.Equal(0, tree.Count);
             for (int i = 0; i <= byte.MaxValue; i++)
             {
@@ -55,7 +55,7 @@ namespace System.Collections.Algorithms.Tests.VebTree
         [Fact]
         public void GivenRandomCollectionWhenAddingElementsToTreeThenAddReturnsSameResultAsAddingToSet()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             var rand = new Random();
             var set = new HashSet<uint>();
             for (int i = 0; i <= byte.MaxValue; i++)
@@ -68,7 +68,7 @@ namespace System.Collections.Algorithms.Tests.VebTree
         [Fact]
         public void GivenPopulatedVebTreeWhenFindThenAlwaysReturnTrue()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             var rand = new Random();
             var set = new HashSet<byte>();
             for (int i = 0; i <= byte.MaxValue; i++)
@@ -86,14 +86,14 @@ namespace System.Collections.Algorithms.Tests.VebTree
         [Fact]
         public void GivenVebTreeWhenAddSameNumberThenReturnFalse()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             for (int i = 0; i <= byte.MaxValue; i++)
             {
                 Assert.True(tree.Add((byte)i));
                 Assert.False(tree.Add((byte)i));
             }
 
-            tree = new VebTree8();
+            tree = new VanEmdeBoasTree8();
             for (int i = byte.MaxValue; i > 0; i--)
             {
                 Assert.True(tree.Add((byte)i));
@@ -104,7 +104,7 @@ namespace System.Collections.Algorithms.Tests.VebTree
         [Fact]
         public void GivenRandomPopulatedTreeWhenTryGetNextReturnsCorrectValue()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             var rand = new Random();
             var list = new List<byte>();
             for (int i = 0; i <= byte.MaxValue; i++)
@@ -136,21 +136,21 @@ namespace System.Collections.Algorithms.Tests.VebTree
         [Fact]
         public void GivenEmptyTreeWhenTryGetNextReturnsFalse()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             Assert.False(tree.TryGetNext(byte.MinValue, out byte _));
         }
 
         [Fact]
         public void GivenEmptyTreeWhenTryGetPrevReturnsFalse()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             Assert.False(tree.TryGetPrevious(byte.MaxValue, out byte _));
         }
 
         [Fact]
         public void GivenRandomPopulatedTreeWhenGetPrevReturnsCorrectValue()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             var rand = new Random();
             var list = new List<byte>();
             for (int i = 0; i <= byte.MaxValue; i++)
@@ -181,7 +181,7 @@ namespace System.Collections.Algorithms.Tests.VebTree
         [Fact]
         public void GivenFullVebTreeWhenRemoveNumberThenFindCantFindIt()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             for (ushort i = 0; i <= byte.MaxValue; i++)
             {
                 tree.Add((byte)i);
@@ -208,7 +208,7 @@ namespace System.Collections.Algorithms.Tests.VebTree
         {
             for (int randIter = 0; randIter < 1000; randIter++)
             {
-                var tree = new VebTree8();
+                var tree = new VanEmdeBoasTree8();
                 var rand = new Random();
                 var arr = new bool[1 << 8];
                 for (int i = 0; i <= byte.MaxValue; i++)
@@ -230,7 +230,7 @@ namespace System.Collections.Algorithms.Tests.VebTree
         [Fact]
         public void GivenRandomFilledTreeWhenCallMaxAndMinThenReturnProperValues()
         {
-            var tree = new VebTree8();
+            var tree = new VanEmdeBoasTree8();
             var rand = new Random();
             byte min = byte.MaxValue;
             byte max = byte.MinValue;

@@ -1,21 +1,23 @@
 ﻿namespace System.Collections.Algorithms
 {
+    using System.Collections.Generic;
+
     /// <summary>
-    /// Van Emde Boas tree for dimensionality of <see cref="ushort"/>.
+    /// Van Emde Boas tree for dimensionality of <see cref="ulong"/>.
     /// </summary>
-    public class VebTree16
+    public class VanEmdeBoasTree64
     {
-        private VebTree8?[] _clusters;
-        private VebTree8? _summary;
+        private Dictionary<uint, VanEmdeBoasTree32?> _clusters;
+        private VanEmdeBoasTree32? _summary;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VebTree16"/> class.
+        /// Initializes a new instance of the <see cref="VanEmdeBoasTree64"/> class.
         /// </summary>
-        public VebTree16()
+        public VanEmdeBoasTree64()
         {
-            Min = ushort.MaxValue;
+            Min = ulong.MaxValue;
             Count = 0;
-            _clusters = new VebTree8[1 << 8];
+            _clusters = new Dictionary<uint, VanEmdeBoasTree32?>();
         }
 
         /// <summary>
@@ -23,18 +25,18 @@
         /// </summary>
         /// <remarks>
         /// This is O(1) operation.
-        /// In case if tree empty returns <see cref="ushort.MaxValue"/>.
+        /// In case if tree empty returns <see cref="ulong.MaxValue"/>.
         /// </remarks>
-        public ushort Min { get; private set; }
+        public ulong Min { get; private set; }
 
         /// <summary>
         /// Gets maximum element in a tree.
         /// </summary>
         /// <remarks>
         /// This is O(1) operation.
-        /// In case if tree empty returns <see cref="ushort.MinValue"/>.
+        /// In case if tree empty returns <see cref="ulong.MinValue"/>.
         /// </remarks>
-        public ushort Max { get; private set; }
+        public ulong Max { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether this tree empty or not.
@@ -42,19 +44,19 @@
         public bool Empty => Count == 0;
 
         /// <summary>
-        /// Gets the number of items that are contained in a <see cref="VebTree8"/>.
+        /// Gets the number of items that are contained in a <see cref="VanEmdeBoasTree64"/>.
         /// </summary>
-        public uint Count { get; private set; }
+        public ulong Count { get; private set; }
 
         /// <summary>
-        /// Adds item to <see cref="VebTree32"/>.
+        /// Adds item to <see cref="VebTree64"/>.
         /// </summary>
         /// <remarks>
-        /// This is O(log 32) operation.
+        /// This is O(log 64) operation.
         /// </remarks>
-        /// <param name="item">Item to add to <see cref="VebTree32"/>.</param>
-        /// <returns><see langword="true"/> if item been added, and <see langword="false"/> if <see cref="VebTree32"/> already had such item.</returns>
-        public bool Add(ushort item)
+        /// <param name="item">Item to add to <see cref="VanEmdeBoasTree64"/>.</param>
+        /// <returns><see langword="true"/> if item been added, and <see langword="false"/> if <see cref="VanEmdeBoasTree64"/> already had such item.</returns>
+        public bool Add(ulong item)
         {
             if (Empty)
             {
@@ -90,10 +92,11 @@
 
                 var high = High(item);
                 var low = Low(item);
-                var cluster = _clusters[high] ?? new VebTree8();
+                _clusters.TryGetValue(high, out VanEmdeBoasTree32? cluster);
+                cluster = cluster ?? new VanEmdeBoasTree32();
                 if (cluster.Empty)
                 {
-                    _summary = _summary ?? new VebTree8();
+                    _summary = _summary ?? new VanEmdeBoasTree32();
                     _summary.Add(high);
                 }
 
@@ -106,14 +109,14 @@
         }
 
         /// <summary>
-        /// Searches for item in <see cref="VebTree16"/>.
+        /// Searches for item in <see cref="VanEmdeBoasTree64"/>.
         /// </summary>
         /// <remarks>
-        /// This is O(log 32) operation.
+        /// This is O(log 64) operation.
         /// </remarks>
-        /// <param name="item">Item to search in <see cref="VebTree16"/>.</param>
+        /// <param name="item">Item to search in <see cref="VanEmdeBoasTree64"/>.</param>
         /// <returns><see langword="true"/> if item is present, and <see langword="false"/> if not present.</returns>
-        public bool Find(ushort item)
+        public bool Find(ulong item)
         {
             if (Empty)
             {
@@ -126,7 +129,7 @@
             }
             else
             {
-                var cluster = _clusters[High(item)];
+                _clusters.TryGetValue(High(item), out VanEmdeBoasTree32? cluster);
                 if (cluster is null)
                 {
                     return false;
@@ -139,16 +142,16 @@
         }
 
         /// <summary>
-        /// Trys to get next value bigger than <paramref name="value"/> in <see cref="VebTree16"/>.
+        /// Trys to get next value bigger than <paramref name="value"/> in <see cref="VanEmdeBoasTree64"/>.
         /// </summary>
         /// <remarks>
-        /// This is O(log 32) operation.
-        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree16"/>.
+        /// This is O(log 64) operation.
+        /// <paramref name="value"/> Doesn't have to be present in <see cref="VanEmdeBoasTree64"/>.
         /// </remarks>
         /// <param name="value">Looking for item bigger than this one.</param>
-        /// <param name="result">Item bigger than <paramref name="value"/>> if it exist, <see cref="ushort.MaxValue"/> otherwise.</param>
+        /// <param name="result">Item bigger than <paramref name="value"/>> if it exist, <see cref="ulong.MaxValue"/> otherwise.</param>
         /// <returns><see langword="true"/> if such item exist, and <see langword="false"/> if not.</returns>
-        public bool TryGetNext(ushort value, out ushort result)
+        public bool TryGetNext(ulong value, out ulong result)
         {
             var (found, ans) = GetNext(value);
             result = ans;
@@ -156,16 +159,16 @@
         }
 
         /// <summary>
-        /// Trys to get next value smaller than <paramref name="value"/> in <see cref="VebTree16"/>.
+        /// Trys to get next value smaller than <paramref name="value"/> in <see cref="VanEmdeBoasTree64"/>.
         /// </summary>
         /// <remarks>
-        /// This is O(log 32) operation.
-        /// <paramref name="value"/> Doesn't have to be present in <see cref="VebTree16"/>.
+        /// This is O(log 64) operation.
+        /// <paramref name="value"/> Doesn't have to be present in <see cref="VanEmdeBoasTree64"/>.
         /// </remarks>
         /// <param name="value">Looking for item smaller than this one.</param>
-        /// <param name="result">Item smaller than <paramref name="value"/>> if it exist, <see cref="ushort.MinValue"/> otherwise.</param>
+        /// <param name="result">Item smaller than <paramref name="value"/>> if it exist, <see cref="ulong.MinValue"/> otherwise.</param>
         /// <returns><see langword="true"/> if such item exist, and <see langword="false"/> if not.</returns>
-        public bool TryGetPrevious(ushort value, out ushort result)
+        public bool TryGetPrevious(ulong value, out ulong result)
         {
             var (found, ans) = GetPrev(value);
             result = ans;
@@ -173,22 +176,22 @@
         }
 
         /// <summary>
-        /// Remove item from <see cref="VebTree32"/>.
+        /// Remove item from <see cref="VanEmdeBoasTree64"/>.
         /// </summary>
         /// <remarks>
-        /// This is O(log 32) operation.
+        /// This is O(log 64) operation.
         /// </remarks>
-        /// <param name="item">Item to remove from <see cref="VebTree16"/>.</param>
-        /// <returns><see langword="true"/> if item been removed, and <see langword="false"/> if <see cref="VebTree16"/> didn't had it.</returns>
-        public bool Remove(ushort item)
+        /// <param name="item">Item to remove from <see cref="VanEmdeBoasTree64"/>.</param>
+        /// <returns><see langword="true"/> if item been removed, and <see langword="false"/> if <see cref="VanEmdeBoasTree64"/> didn't had it.</returns>
+        public bool Remove(ulong item)
         {
             if (Empty)
                 return false;
 
             if (Min == item && Max == item)
             {
-                Min = ushort.MaxValue;
-                Max = 0;
+                Min = ulong.MaxValue;
+                Max = ulong.MinValue;
                 Count--;
                 return true;
             }
@@ -227,13 +230,13 @@
                 return false;
             var high = High(item);
             var low = Low(item);
-            var cluster = _clusters[high];
+            _clusters.TryGetValue(high, out VanEmdeBoasTree32? cluster);
             if (cluster == null)
                 return false;
             var removed = cluster!.Remove(low);
             if (cluster!.Empty)
             {
-                _clusters[high] = default;
+                _clusters.Remove(high);
                 _summary.Remove(high);
             }
 
@@ -243,18 +246,18 @@
         }
 
         /// <summary>
-        /// Return next element after <paramref name="x"/>.
+        /// Return first element in <see cref="VanEmdeBoasTree64"/> bigger than <paramref name="threshold"/>.
         /// </summary>
-        /// <param name="x">x</param>
-        /// <returns>Tuple where first part is next element exist, and second part is founded element or <see cref="ushort.MaxValue"/>.</returns>
-        internal (bool, ushort) GetNext(ushort x)
+        /// <param name="threshold">Threshold value.</param>
+        /// <returns>Tuple where first part is next element exist, and second part is founded element or <see cref="ulong.MaxValue"/>.</returns>
+        internal (bool, ulong) GetNext(ulong threshold)
         {
-            if (Empty || Max <= x)
+            if (Empty || Max <= threshold)
             {
-                return (false, ushort.MaxValue);
+                return (false, ulong.MaxValue);
             }
 
-            if (Min > x)
+            if (Min > threshold)
             {
                 return (true, Min);
             }
@@ -265,9 +268,9 @@
             }
             else
             {
-                var high = High(x);
-                var low = Low(x);
-                var cluster = _clusters[high];
+                var high = High(threshold);
+                var low = Low(threshold);
+                _clusters.TryGetValue(high, out VanEmdeBoasTree32? cluster);
                 if (cluster != null && !cluster!.Empty && cluster!.Max > low)
                 {
                     var (_, result) = cluster!.GetNext(low);
@@ -290,18 +293,18 @@
         }
 
         /// <summary>
-        /// Return previous element before <paramref name="x"/>.
+        /// Return last element in <see cref="VanEmdeBoasTree64"/> smaller than <paramref name="threshold"/>.
         /// </summary>
-        /// <param name="x">x</param>
-        /// <returns>Tuple where first part is next element exist, and second part is founded element or <see cref="ushort.MinValue"/>.</returns>
-        internal (bool, ushort) GetPrev(ushort x)
+        /// <param name="threshold">Threshold value.</param>
+        /// <returns>Tuple where first part is next element exist, and second part is founded element or <see cref="ulong.MinValue"/>.</returns>
+        private (bool, ulong) GetPrev(ulong threshold)
         {
-            if (Empty || Min >= x)
+            if (Empty || Min >= threshold)
             {
-                return (false, ushort.MinValue);
+                return (false, 0);
             }
 
-            if (Max < x)
+            if (Max < threshold)
             {
                 return (true, Max);
             }
@@ -312,10 +315,10 @@
             }
             else
             {
-                var high = High(x);
-                var low = Low(x);
-                var cluster = _clusters[high];
-                if (cluster != null && !cluster!.Empty && cluster!.Min < low)
+                var high = High(threshold);
+                var low = Low(threshold);
+                _clusters.TryGetValue(high, out VanEmdeBoasTree32? cluster);
+                if (_clusters[high] != null && !cluster!.Empty && cluster!.Min < low)
                 {
                     var (_, result) = cluster!.GetPrev(low);
                     return (true, Merge(high, result));
@@ -336,10 +339,10 @@
             }
         }
 
-        private byte High(ushort x) => (byte)(x >> 8);
+        private uint High(ulong x) => (uint)(x >> 32);
 
-        private byte Low(ushort x) => (byte)(x & ((1 << 8) - 1));
+        private uint Low(ulong x) => (uint)(x & uint.MaxValue);
 
-        private ushort Merge(byte high, byte low) => (ushort)((high << 8) + low);
+        private ulong Merge(uint high, uint low) => ((ulong)high << 32) + low;
     }
 }
