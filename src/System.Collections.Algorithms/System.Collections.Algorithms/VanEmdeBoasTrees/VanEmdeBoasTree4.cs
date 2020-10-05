@@ -8,14 +8,14 @@
     /// <see cref="BitArray"/> could to the trick to preserve information and be fast enough, althrough maybe refactoring into bit operations with
     /// fast highest bit and lowest bit would bring better performance.
     /// </remarks>
-    internal class VaneEmdeBoasTree4
+    internal class VanEmdeBoasTree4
     {
         private BitArray bits;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VaneEmdeBoasTree4"/> class.
+        /// Initializes a new instance of the <see cref="VanEmdeBoasTree4"/> class.
         /// </summary>
-        public VaneEmdeBoasTree4()
+        public VanEmdeBoasTree4()
         {
             bits = new BitArray(16);
             Min = 16;
@@ -38,13 +38,13 @@
         public byte Max { get; private set; }
 
         /// <summary>
-        /// Adds item to <see cref="VaneEmdeBoasTree4"/>.
+        /// Adds item to <see cref="VanEmdeBoasTree4"/>.
         /// </summary>
         /// <remarks>
         /// This is O(1) operation.
         /// </remarks>
-        /// <param name="item">Item to add to <see cref="VaneEmdeBoasTree4"/>.</param>
-        /// <returns><see langword="true"/> if item been added, and <see langword="false"/> if <see cref="VaneEmdeBoasTree4"/> already had such item.</returns>
+        /// <param name="item">Item to add to <see cref="VanEmdeBoasTree4"/>.</param>
+        /// <returns><see langword="true"/> if item been added, and <see langword="false"/> if <see cref="VanEmdeBoasTree4"/> already had such item.</returns>
         public bool Add(byte item)
         {
             if (bits.Get(item)) return false;
