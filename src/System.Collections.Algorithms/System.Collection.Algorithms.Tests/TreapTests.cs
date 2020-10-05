@@ -154,7 +154,7 @@ namespace System.Collections.Algorithms.Tests
             var second = new Treap<int>(b);
             first.MergeIn(second);
             Assert.Equal(10, first.Count);
-            Assert.Equal(0, second.Count);
+            Assert.Empty(second);
             Assert.Equal(a.Concat(b).OrderBy(i => i), first);
         }
 
@@ -167,7 +167,7 @@ namespace System.Collections.Algorithms.Tests
             var second = new Treap<int>(b);
             first.MergeIn(second);
             Assert.Equal(a.Count + b.Count, first.Count);
-            Assert.Equal(0, second.Count);
+            Assert.Empty(second);
             Assert.Equal(a.Concat(b).OrderBy(i => i), first);
         }
 
@@ -179,14 +179,14 @@ namespace System.Collections.Algorithms.Tests
             var second = new Treap<int>();
             first.MergeIn(second);
             Assert.Equal(5, first.Count);
-            Assert.Equal(0, second.Count);
+            Assert.Empty(second);
             Assert.Equal(a.OrderBy(i => i), first);
 
             first = new Treap<int>();
             second = new Treap<int>(a);
             first.MergeIn(second);
             Assert.Equal(5, first.Count);
-            Assert.Equal(0, second.Count);
+            Assert.Empty(second);
             Assert.Equal(a.OrderBy(i => i), first);
         }
 

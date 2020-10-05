@@ -5,8 +5,8 @@
     /// </summary>
     public class VanEmdeBoasTree8
     {
-        private VaneEmdeBoasTree4?[] _clusters;
-        private VaneEmdeBoasTree4? _summary;
+        private VanEmdeBoasTree4?[] _clusters;
+        private VanEmdeBoasTree4? _summary;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VanEmdeBoasTree8"/> class.
@@ -16,7 +16,7 @@
             Min = byte.MaxValue;
             Max = byte.MinValue;
             Count = 0;
-            _clusters = new VaneEmdeBoasTree4[1 << 4];
+            _clusters = new VanEmdeBoasTree4[1 << 4];
         }
 
         /// <summary>
@@ -91,10 +91,10 @@
 
                 var high = High(item);
                 var low = Low(item);
-                var cluster = _clusters[high] ?? new VaneEmdeBoasTree4();
+                var cluster = _clusters[high] ?? new VanEmdeBoasTree4();
                 if (cluster.Empty)
                 {
-                    _summary = _summary ?? new VaneEmdeBoasTree4();
+                    _summary = _summary ?? new VanEmdeBoasTree4();
                     _summary.Add(high);
                 }
 

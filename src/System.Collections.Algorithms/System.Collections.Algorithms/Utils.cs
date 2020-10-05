@@ -5,6 +5,11 @@
     /// </summary>
     internal static class Utils
     {
+        /// <summary>
+        /// Returns the integer (ceiling) log of the specified value, base 2.
+        /// </summary>
+        /// <param name="value">The number from which to obtain the logarithm.</param>
+        /// <returns>The log of the specified value, base 2.</returns>
         public static int Log2(int value)
         {
             if (value == 0)

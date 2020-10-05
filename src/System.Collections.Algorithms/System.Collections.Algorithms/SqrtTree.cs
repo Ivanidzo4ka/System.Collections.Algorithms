@@ -243,7 +243,7 @@
                 for (int j = i; j < blockCount; j++)
                 {
                     T add = _suffix[layer][left + (j << blocSizeLog)];
-                    ans = (i == j) ? add : Operation(ans, add);
+                    ans = (i == j) ? add : Operation(ans!, add);
                     _between[layer - 1][betweenOffset + left + (i << blockCountLog) + j] = ans;
                 }
             }
@@ -301,7 +301,7 @@
         }
 
         /// <summary>
-        /// Enumerates the elements of a <see cref="SqrtTree{T}{T}"/> object.
+        /// Enumerates the elements of a <see cref="SqrtTree{T}"/> object.
         /// </summary>
         public struct Enumerator : IEnumerator<T>
         {

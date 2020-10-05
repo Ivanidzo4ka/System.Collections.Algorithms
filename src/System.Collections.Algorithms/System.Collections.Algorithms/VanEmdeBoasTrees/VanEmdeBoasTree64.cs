@@ -49,7 +49,7 @@
         public ulong Count { get; private set; }
 
         /// <summary>
-        /// Adds item to <see cref="VebTree64"/>.
+        /// Adds item to <see cref="VanEmdeBoasTree64"/>.
         /// </summary>
         /// <remarks>
         /// This is O(log 64) operation.

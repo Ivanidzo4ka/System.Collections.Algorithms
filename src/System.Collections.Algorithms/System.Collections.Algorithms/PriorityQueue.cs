@@ -59,7 +59,7 @@
         /// Initializes a new instance of the <see cref="PriorityQueue{TKey, TValue}"/> class.
         /// Creates priority queue and fill it with provided pairs of key and value.
         /// </summary>
-        /// <param name="collection">The <see cref="IEnumerable{<KeyValuePair{TKey, TValue}}"/> whose elements are copied to the new <see cref="PriorityQueue{TKey, TValue}"/>.</param>
+        /// <param name="collection">The <see cref="IEnumerable{T}"/> whose elements are copied to the new <see cref="PriorityQueue{TKey, TValue}"/>.</param>
         public PriorityQueue(IEnumerable<KeyValuePair<TKey, TValue>> collection)
             : this(collection, null)
         {
@@ -68,7 +68,7 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="PriorityQueue{TKey, TValue}"/> class.
         /// </summary>
-        /// <param name="collection">The <see cref="IEnumerable{<KeyValuePair{TKey, TValue}}"/> whose elements are copied to the new <see cref="PriorityQueue{TKey, TValue}"/>.</param>
+        /// <param name="collection">The <see cref="IEnumerable{T}"/> whose elements are copied to the new <see cref="PriorityQueue{TKey, TValue}"/>.</param>
         /// <param name="comparer">Comparer to manage order of the keys.</param>
         public PriorityQueue(IEnumerable<KeyValuePair<TKey, TValue>> collection, IComparer<TKey>? comparer)
             : this(comparer)
@@ -233,7 +233,7 @@
         IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => _data.GetEnumerator();
 
         /// <summary>
-        /// Converts priority queue into <see cref="KeyValuePair{TKey, TValue}[]"/>.
+        /// Converts priority queue into <see cref="KeyValuePair{TKey, TValue}"/>[].
         /// </summary>
         /// <returns>Array of elements.</returns>
         internal KeyValuePair<TKey, TValue>[] ToArray() => _data.ToArray();
@@ -271,11 +271,20 @@
             }
         }
 
-        internal sealed class PriorityQueueDebugView<T, V>
+        /// <summary>
+        /// Class change how <see cref="PriorityQueue{TKey, TValue}"/> displayed in debugger view.
+        /// </summary>
+        /// <typeparam name="TPriority">Type of priority in queue.</typeparam>
+        /// <typeparam name="TElement">Type of element in queue.</typeparam>
+        internal sealed class PriorityQueueDebugView<TPriority, TElement>
         {
-            private readonly PriorityQueue<T, V> _queue;
+            private readonly PriorityQueue<TPriority, TElement> _queue;
 
-            public PriorityQueueDebugView(PriorityQueue<T, V> queue)
+            /// <summary>
+            /// Initializes a new instance of the <see cref="PriorityQueueDebugView{TPriority, TElement}"/> class which wraps queue for display it debugger view.
+            /// </summary>
+            /// <param name="queue">Queue to wrap.</param>
+            public PriorityQueueDebugView(PriorityQueue<TPriority, TElement> queue)
             {
                 if (queue == null)
                 {
@@ -285,8 +294,11 @@
                 _queue = queue;
             }
 
+            /// <summary>
+            /// Gets array of <see cref="KeyValuePair{TKey, TValue}"/>.
+            /// </summary>
             [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-            public KeyValuePair<T, V>[] Items
+            public KeyValuePair<TPriority, TElement>[] Items
             {
                 get
                 {

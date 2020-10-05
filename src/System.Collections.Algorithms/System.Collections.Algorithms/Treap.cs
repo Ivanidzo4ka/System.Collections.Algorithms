@@ -361,7 +361,7 @@
             T result;
             while (true)
             {
-                var leftSize = GetCount(current.Left);
+                var leftSize = GetCount(current!.Left);
                 if (leftSize == k)
                 {
                     result = current.Value;
@@ -506,11 +506,10 @@
 
         private class Node
         {
-            public readonly T Value;
-            public int Prior;
-            public int Size;
+#pragma warning disable SA1401 // Fields should be private
             public Node? Left;
             public Node? Right;
+#pragma warning restore SA1401 // Fields should be private
 
             public Node(T value, int prior, Node? left = null, Node? right = null)
             {
@@ -518,7 +517,14 @@
                 Prior = prior;
                 Left = left;
                 Right = right;
+                Size = 0;
             }
+
+            public T Value { get; private set; }
+
+            public int Prior { get; set; }
+
+            public int Size { get; set; }
         }
     }
 }
