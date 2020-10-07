@@ -7,7 +7,7 @@ namespace System.Collections.Algorithms
     public class XFastTrie
     {
         private Node _root;
-        private const int Dimension = 32;
+        private const int Dimension = 8;
         public XFastTrie()
         {
             _root = new InternalNode();
@@ -17,6 +17,7 @@ namespace System.Collections.Algorithms
         {
             public Node? Left;
             public Node? Right;
+            public static int i;
         }
 
         public class InternalNode : Node
@@ -25,11 +26,10 @@ namespace System.Collections.Algorithms
 
         public class Leaf : Node
         {
-
-            public uint Value;
+            public byte Value;
         }
 
-        private Leaf? PredOrSucc(uint x)
+        private Leaf? PredOrSucc(byte x)
         {
             if (_root.Left == null && _root.Right == null)
                 return null;
@@ -86,7 +86,7 @@ namespace System.Collections.Algorithms
             return (Leaf)current;
         }
 
-        private Leaf? Succ(uint x)
+        private Leaf? Succ(byte x)
         {
             var predOrSucc = PredOrSucc(x);
             if (predOrSucc == null)
@@ -97,7 +97,7 @@ namespace System.Collections.Algorithms
                 return predOrSucc;
         }
 
-        private Leaf? Pred(uint x)
+        private Leaf? Pred(byte x)
         {
             var predOrSucc = PredOrSucc(x);
             if (predOrSucc == null)
@@ -123,7 +123,7 @@ namespace System.Collections.Algorithms
                 {
                     leaf.Left.Right = null;
                 }
-                else
+                else if (leaf.Right!=null)
                 {
                     leaf.Right.Left = null;
                 }
@@ -139,7 +139,7 @@ namespace System.Collections.Algorithms
             if (temp != null)
                 temp.Left = addition;
         }
-        
+
         private void InsertLeftLeaf(Leaf leaf, Leaf addition)
         {
             var temp = leaf.Left;
@@ -150,17 +150,20 @@ namespace System.Collections.Algorithms
                 temp.Right = addition;
         }
 
-        public bool Add(uint x)
+        public bool Add(byte x)
         {
             Node current = _root;
-            Leaf? predOrSucc = PredOrSucc(x);
+            Stack<Node> stack = new Stack<Node>();
+            Leaf? predOrSucc = null;
             int i;
-            for (i = 0; i < Dimension; i++)
+            for (i = 0; i < Dimension - 1; i++)
             {
+                stack.Push(current);
                 if (((x >> (Dimension - 1 - i)) & 1U) == 1U)
                 {
-                    if (current.Right is null)
+                    if (!(current.Right is InternalNode))
                     {
+                        predOrSucc ??= current.Right as Leaf;
                         current.Right = new InternalNode();
                     }
 
@@ -168,89 +171,150 @@ namespace System.Collections.Algorithms
                 }
                 else
                 {
-                    if (current.Left is null)
+                    if (!(current.Left is InternalNode))
                     {
+                        predOrSucc ??= current.Left as Leaf;
                         current.Left = new InternalNode();
                     }
+
                     current = current.Left;
                 }
+
             }
-            if (((x >> i) & 1U) == 1U)
+
+            Leaf? added = null;
+            if ((x & 1U) == 1U)
             {
                 if (current.Right is null)
                 {
-                    var addition = new Leaf() { Value = x };
-                    current.Right = addition;
+                    predOrSucc ??= current.Left as Leaf;
+                    added = new Leaf() { Value = x };
+                    current.Right = added;
                     if (predOrSucc != null)
+                    {
                         if (predOrSucc.Value < x)
-                            InsertRightLeaf(predOrSucc, addition);
+                            InsertRightLeaf(predOrSucc, added);
                         else
-                            InsertLeftLeaf(predOrSucc, addition);
-                    return true;
+                            InsertLeftLeaf(predOrSucc, added);
+                    }
                 }
-                else
-                    return false;
             }
             else
             {
                 if (current.Left is null)
                 {
-                    var addition = new Leaf() { Value = x };
-                    current.Left = addition;
+                    predOrSucc ??= current.Right as Leaf;
+                    added = new Leaf() { Value = x };
+                    current.Left = added;
                     if (predOrSucc != null)
+                    {
                         if (predOrSucc.Value > x)
-                            InsertLeftLeaf(predOrSucc, addition);
+                            InsertLeftLeaf(predOrSucc, added);
                         else
-                            InsertRightLeaf(predOrSucc, addition);
-                    return true;
+                            InsertRightLeaf(predOrSucc, added);
+                    }
+                }
+            }
+            if (added is null)
+                return false;
+            i--;
+            while (stack.Count != 0)
+            {
+                var node = stack.Pop();
+                if (((x >> (Dimension - 1 - i)) & 1U) == 1U)
+                {
+                    if (!(node.Left is InternalNode))
+                    {
+                        var currentLeaf = node.Left as Leaf;
+                        if (currentLeaf == null || currentLeaf.Value > added.Value)
+                            node.Left = added;
+                        else
+                            break;
+                    }
                 }
                 else
-                    return false;
+                {
+                    if (!(node.Right is InternalNode))
+                    {
+                        var currentLeaf = node.Right as Leaf;
+                        if (currentLeaf == null || currentLeaf.Value < added.Value)
+                            node.Right = added;
+                        else
+                            break;
+                    }
+                }
+                i--;
             }
+            return true;
         }
 
-        public bool Find(uint x)
+        public bool Find(byte x)
         {
             Node? current = _root;
             for (int i = 0; i < Dimension; i++)
             {
                 current = ((x >> (Dimension - 1 - i)) & 1U) == 1U ? current.Right : current.Left;
-                if (current is null) return false;
+                if (current is null || (current is Leaf && (i < Dimension - 1))) return false;
             }
-
             return true;
         }
 
-        public bool Remove(uint x)
+        public bool Remove(byte x)
         {
             Node? current = _root;
             int i;
             Stack<Node> stack = new Stack<Node>();
-            for (i = 0; i < Dimension ; i++)
+            for (i = 0; i < Dimension - 1; i++)
             {
-                current = ((x >> (Dimension - 1 - i)) & 1U) == 1U ? current.Right : current.Left;
-                if (current is null) return false;
                 stack.Push(current);
+                current = ((x >> (Dimension - 1 - i)) & 1U) == 1U ? current.Right : current.Left;
+                if (current is null || current is Leaf) return false;
+
             }
-            if (((x >> i) & 1U) == 1U)
+            Leaf? removed;
+            bool destroy = true;
+            if ((x & 1U) == 1U)
             {
+                if (current.Right == null)
+                    return false;
                 RemoveLeaf((Leaf)current.Right);
+                removed = (Leaf)current.Right;
                 current.Right = null;
+                if (current.Left != null)
+                    destroy = false;
             }
             else
             {
+                if (current.Left == null)
+                    return false;
                 RemoveLeaf((Leaf)current.Left);
+                removed = (Leaf)current.Left;
                 current.Left = null;
+                if (current.Right != null)
+                    destroy = false;
             }
+       
             while (stack.Count != 0)
             {
                 var node = stack.Pop();
-                if (((x >> (Dimension - 1 - i)) & 1U) == 1U)
-                    node.Right = null;
+                if (((x >> (Dimension - 1 - stack.Count)) & 1U) == 1U)
+                {
+                    if (destroy)
+                        node.Right = null;
+                    var leaf = node.Left as Leaf;
+                    if (leaf != null && leaf.Value == removed.Value)
+                        node.Left = leaf.Right;
+                }
                 else
-                    node.Left = null;
+                {
+                    if (destroy)
+                        node.Left = null;
+                    var leaf = node.Right as Leaf;
+                    if (leaf != null && leaf.Value == removed.Value)
+                        node.Right = leaf.Left;
+                }
 
-                if (node.Left != null || node.Right != null) break;
+                if (destroy && (node.Left is InternalNode || node.Right is InternalNode)) destroy = false;
                 i--;
             }
             return true;
