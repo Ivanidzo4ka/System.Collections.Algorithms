@@ -8,23 +8,31 @@ namespace System.Collections.Algorithms
     {
         private Node _root;
         private const int Dimension = 8;
+        public int Count;
+        private Leaf? Begin;
+        private Leaf? End;
         public XFastTrie()
         {
             _root = new InternalNode();
+            Count = 0;
+            Begin = null;
+            End = null;
         }
+        public byte Min => Begin != null ? Begin.Value : byte.MaxValue;
+        public byte Max => End != null ? End.Value : byte.MinValue;
 
-        public abstract class Node
+        private abstract class Node
         {
             public Node? Left;
             public Node? Right;
             public static int i;
         }
 
-        public class InternalNode : Node
+        private class InternalNode : Node
         {
         }
 
-        public class Leaf : Node
+        private class Leaf : Node
         {
             public byte Value;
         }
@@ -38,74 +46,58 @@ namespace System.Collections.Algorithms
             for (i = 0; i < Dimension; i++)
             {
                 var node = ((x >> (Dimension - 1 - i)) & 1U) == 1U ? current.Right : current.Left;
-                if (node is null) break;
+                if (node is Leaf)
+                    return node as Leaf;
+                if (node is null)
+                    return current.Right != null ? (Leaf)current.Right : (Leaf)current.Left;
                 current = node;
             }
 
-            if (i == Dimension)
+            return current.Right != null ? (Leaf)current.Right : (Leaf)current.Left;
+        }
+
+        public bool TryGetNext(byte x, out byte result)
+        {
+            var predOrSucc = PredOrSucc(x);
+            result = 0;
+            if (predOrSucc == null)
+                return false;
+            if (predOrSucc.Value <= x)
             {
-                return current.Right != null ? (Leaf)current.Right : (Leaf)current.Left;
-            }
-            else
-            {
-                if (current.Right != null)
-                {
-                    current = current.Right;
-                    i++;
-                    while (i <= Dimension)
-                    {
-                        if (current.Left != null)
-                        {
-                            current = current.Left;
-                        }
-                        else
-                        {
-                            current = current.Right;
-                        }
-                        i++;
-                    }
-                }
+                var right = predOrSucc.Right as Leaf;
+                if (right != null)
+                    result = right.Value;
                 else
-                {
-                    current = current.Left;
-                    i++;
-                    while (i <= Dimension)
-                    {
-                        if (current.Right != null)
-                        {
-                            current = current.Right;
-                        }
-                        else
-                        {
-                            current = current.Left;
-                        }
-                        i++;
-                    }
-                }
+                    return false;
             }
-            return (Leaf)current;
+            else
+            {
+                result = predOrSucc.Value;
+            }
+
+            return true;
         }
 
-        private Leaf? Succ(byte x)
+        public bool TryGetPrevious(byte x, out byte result)
         {
             var predOrSucc = PredOrSucc(x);
+            result = 0;
             if (predOrSucc == null)
-                return null;
-            if (predOrSucc.Value < x)
-                return (Leaf)predOrSucc.Right;
+                return false;
+            if (predOrSucc.Value >= x)
+            {
+                var left = predOrSucc.Left as Leaf;
+                if (left != null)
+                    result = left.Value;
+                else
+                    return false;
+            }
             else
-                return predOrSucc;
-        }
+            {
+                result = predOrSucc.Value;
+            }
 
-        private Leaf? Pred(byte x)
-        {
-            var predOrSucc = PredOrSucc(x);
-            if (predOrSucc == null)
-                return null;
-            if (predOrSucc.Value > x)
-                return (Leaf)predOrSucc.Left;
-            else
-                return predOrSucc;
+            return true;
         }
 
         private void RemoveLeaf(Leaf leaf)
@@ -121,13 +113,23 @@ namespace System.Collections.Algorithms
             {
                 if (leaf.Left != null)
                 {
+                    End = (Leaf)leaf.Left;
                     leaf.Left.Right = null;
+
                 }
-                else if (leaf.Right!=null)
+                else if (leaf.Right != null)
                 {
+                    Begin = (Leaf)leaf.Right;
                     leaf.Right.Left = null;
                 }
+                else
+                {
+                    Begin = null;
+                    End = null;
+                }
             }
+
+            Count--;
         }
 
         private void InsertRightLeaf(Leaf leaf, Leaf addition)
@@ -138,6 +140,8 @@ namespace System.Collections.Algorithms
             addition.Right = temp;
             if (temp != null)
                 temp.Left = addition;
+            if (addition.Value > Max)
+                End = addition;
         }
 
         private void InsertLeftLeaf(Leaf leaf, Leaf addition)
@@ -148,6 +152,8 @@ namespace System.Collections.Algorithms
             addition.Left = temp;
             if (temp != null)
                 temp.Right = addition;
+            if (addition.Value < Min)
+                Begin = addition;
         }
 
         public bool Add(byte x)
@@ -228,8 +234,6 @@ namespace System.Collections.Algorithms
                         var currentLeaf = node.Left as Leaf;
                         if (currentLeaf == null || currentLeaf.Value > added.Value)
                             node.Left = added;
-                        else
-                            break;
                     }
                 }
                 else
@@ -239,12 +243,11 @@ namespace System.Collections.Algorithms
                         var currentLeaf = node.Right as Leaf;
                         if (currentLeaf == null || currentLeaf.Value < added.Value)
                             node.Right = added;
-                        else
-                            break;
                     }
                 }
                 i--;
             }
+            Count++;
             return true;
         }
 
@@ -293,7 +296,7 @@ namespace System.Collections.Algorithms
                 if (current.Right != null)
                     destroy = false;
             }
-       
+
             while (stack.Count != 0)
             {
                 var node = stack.Pop();
