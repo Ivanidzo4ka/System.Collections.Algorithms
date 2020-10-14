@@ -105,7 +105,7 @@ namespace System.Collections.Algorithms.Tests
         public void GivenRandomPopulatedTreeWhenTryGetNextReturnsCorrectValue()
         {
             var tree = new XFastTrie();
-            var rand = new Random(1);
+            var rand = new Random();
             var list = new List<byte>();
             for (int i = 0; i <= byte.MaxValue; i++)
             {
@@ -151,9 +151,9 @@ namespace System.Collections.Algorithms.Tests
         public void GivenRandomPopulatedTreeWhenGetPrevReturnsCorrectValue()
         {
             var tree = new XFastTrie();
-            var rand = new Random();
+            var rand = new Random(1);
             var list = new List<byte>();
-            for (int i = 0; i <= byte.MaxValue; i++)
+            for (int i = 0; i <= 65; i++)
             {
                 var elem = (byte)rand.Next(1 << 8);
                 list.Add(elem);

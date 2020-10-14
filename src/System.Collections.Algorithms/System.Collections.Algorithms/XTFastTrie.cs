@@ -11,13 +11,19 @@ namespace System.Collections.Algorithms
         public int Count;
         private Leaf? Begin;
         private Leaf? End;
+        private Dictionary<byte, InternalNode>[] _prefixes;
+
         public XFastTrie()
         {
             _root = new InternalNode();
             Count = 0;
             Begin = null;
             End = null;
+            _prefixes = new Dictionary<byte, InternalNode>[Dimension - 1];
+            for (int i = 0; i < Dimension - 1; i++)
+                _prefixes[i] = new Dictionary<byte, InternalNode>();
         }
+
         public byte Min => Begin != null ? Begin.Value : byte.MaxValue;
         public byte Max => End != null ? End.Value : byte.MinValue;
 
@@ -56,19 +62,60 @@ namespace System.Collections.Algorithms
             return current.Right != null ? (Leaf)current.Right : (Leaf)current.Left;
         }
 
+        private Leaf? PredOrSuccPrefix(byte x)
+        {
+            if (_root.Left == null && _root.Right == null)
+                return null;
+            int low = 0, high = Dimension - 1;
+            InternalNode found = null;
+            while (high - low > 1)
+            {
+                int mid = (low + high) / 2;
+                byte prefix = (byte)(x >> (Dimension - 1 - mid));
+                if (_prefixes[mid].TryGetValue(prefix, out InternalNode look))
+                {
+                    low = mid;
+                    found = look;
+                }
+                else
+                    high = mid;
+            }
+            if (low == Dimension - 2)
+            {
+                var t = found.Right == null ? (Leaf)found.Left : (Leaf)found.Right;
+                if (t.Value != x)
+                    return t;
+                else
+                    return t.Right != null ? (Leaf)t.Right : (Leaf)t.Left;
+            }
+            if (found.Left is Leaf result)
+                return result;
+            else
+                return found.Right as Leaf;
+        }
+
         public bool TryGetNext(byte x, out byte result)
         {
-            var predOrSucc = PredOrSucc(x);
+            var predOrSucc = PredOrSuccPrefix(x);
+            var pref = PredOrSuccPrefix(x);
             result = 0;
             if (predOrSucc == null)
                 return false;
-            if (predOrSucc.Value <= x)
+            if (predOrSucc.Value < x)
             {
                 var right = predOrSucc.Right as Leaf;
                 if (right != null)
-                    result = right.Value;
-                else
-                    return false;
+                {
+                    if (right.Value > x)
+                        result = right.Value;
+                    else
+                    {
+                        if (right.Right is Leaf secondRight)
+                            result = secondRight.Value;
+                        else
+                            return false;
+                    }
+                }
             }
             else
             {
@@ -80,15 +127,26 @@ namespace System.Collections.Algorithms
 
         public bool TryGetPrevious(byte x, out byte result)
         {
-            var predOrSucc = PredOrSucc(x);
+            var predOrSucc = PredOrSuccPrefix(x);
+            //var pref = PredOrSuccPrefix(x);
             result = 0;
             if (predOrSucc == null)
                 return false;
-            if (predOrSucc.Value >= x)
+            if (predOrSucc.Value > x)
             {
                 var left = predOrSucc.Left as Leaf;
                 if (left != null)
-                    result = left.Value;
+                {
+                    if (left.Value < x)
+                        result = left.Value;
+                    else
+                    {
+                        if (left.Left is Leaf secondLeft)
+                            result = secondLeft.Value;
+                        else
+                            return false;
+                    }
+                }
                 else
                     return false;
             }
@@ -159,28 +217,33 @@ namespace System.Collections.Algorithms
         public bool Add(byte x)
         {
             Node current = _root;
-            Stack<Node> stack = new Stack<Node>();
+            Stack<(Node, bool)> stack = new Stack<(Node, bool)>();
             Leaf? predOrSucc = null;
-            int i;
-            for (i = 0; i < Dimension - 1; i++)
+            for (int i = 0; i < Dimension - 1; i++)
             {
-                stack.Push(current);
-                if (((x >> (Dimension - 1 - i)) & 1U) == 1U)
+                byte prefix = (byte)(x >> (Dimension - 1 - i));
+                if ((prefix & 1U) == 1U)
                 {
+                    stack.Push((current, true));
                     if (!(current.Right is InternalNode))
                     {
                         predOrSucc ??= current.Right as Leaf;
-                        current.Right = new InternalNode();
+                        var newNode = new InternalNode();
+                        _prefixes[i].Add(prefix, newNode);
+                        current.Right = newNode;
                     }
 
                     current = current.Right;
                 }
                 else
                 {
+                    stack.Push((current, false));
                     if (!(current.Left is InternalNode))
                     {
                         predOrSucc ??= current.Left as Leaf;
-                        current.Left = new InternalNode();
+                        var newNode = new InternalNode();
+                        _prefixes[i].Add(prefix, newNode);
+                        current.Left = newNode;
                     }
 
                     current = current.Left;
@@ -223,11 +286,10 @@ namespace System.Collections.Algorithms
             }
             if (added is null)
                 return false;
-            i--;
             while (stack.Count != 0)
             {
-                var node = stack.Pop();
-                if (((x >> (Dimension - 1 - i)) & 1U) == 1U)
+                var (node, direction) = stack.Pop();
+                if (direction)
                 {
                     if (!(node.Left is InternalNode))
                     {
@@ -245,7 +307,6 @@ namespace System.Collections.Algorithms
                             node.Right = added;
                     }
                 }
-                i--;
             }
             Count++;
             return true;
@@ -300,10 +361,14 @@ namespace System.Collections.Algorithms
             while (stack.Count != 0)
             {
                 var node = stack.Pop();
+                byte prefix = (byte)(x >> (Dimension - 1 - stack.Count));
                 if (((x >> (Dimension - 1 - stack.Count)) & 1U) == 1U)
                 {
                     if (destroy)
+                    {
+                        _prefixes[stack.Count].Remove(prefix);
                         node.Right = null;
+                    }
                     var leaf = node.Left as Leaf;
                     if (leaf != null && leaf.Value == removed.Value)
                         node.Left = leaf.Right;
@@ -311,7 +376,10 @@ namespace System.Collections.Algorithms
                 else
                 {
                     if (destroy)
+                    {
+                        _prefixes[stack.Count].Remove(prefix);
                         node.Left = null;
+                    }
                     var leaf = node.Right as Leaf;
                     if (leaf != null && leaf.Value == removed.Value)
                         node.Right = leaf.Left;
