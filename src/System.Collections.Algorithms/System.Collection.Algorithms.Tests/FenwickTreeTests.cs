@@ -137,9 +137,9 @@ namespace System.Collections.Algorithms.Tests
         {
             var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, Add, Minus);
             Assert.Throws<ArgumentOutOfRangeException>(() => tree[-1]);
-            Assert.Throws<ArgumentOutOfRangeException>(() => tree[5]);
+            Assert.Throws<ArgumentOutOfRangeException>(() => tree[4]);
             Assert.Throws<ArgumentOutOfRangeException>(() => tree[-1] = 1);
-            Assert.Throws<ArgumentOutOfRangeException>(() => tree[5] = 1);
+            Assert.Throws<ArgumentOutOfRangeException>(() => tree[4] = 1);
         }
     }
 }

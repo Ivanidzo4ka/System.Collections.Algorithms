@@ -1,4 +1,6 @@
-﻿namespace System.Collections.Algorithms
+﻿using System.Runtime.CompilerServices;
+
+namespace System.Collections.Algorithms
 {
     /// <summary>
     /// Set of useful internal utils.
@@ -26,5 +28,13 @@
 
             return res;
         }
+
+        /// <summary>
+        /// Returns integer where all 1 in bit representation replaces with 0 except least significant bit.
+        /// </summary>
+        /// <param name="x">Value to apply operation.</param>
+        /// <returns>Integer where all 1 in bit representation replaces with 0 except least significant bit.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int IsolateLastBit(int x) => x & -x;
     }
 }
