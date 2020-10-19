@@ -35,7 +35,7 @@
                 throw new ArgumentException("Collection is empty", nameof(data));
             _tree = new TValue[_data.Length];
             Operation = operation ?? throw new ArgumentNullException(nameof(operation));
-            ReverseOperation = reverseOperation ?? throw new ArgumentNullException(nameof(reverseOperation));
+            ReverseOperation = reverseOperation;
             Selector = selector ?? throw new ArgumentNullException(nameof(selector));
             for (int i = 0; i < _data.Length; i++)
                 _tree[i] = defaultValue;
@@ -78,9 +78,7 @@
             get
             {
                 if (index >= _data.Length || index < 0)
-                {
                     throw new ArgumentOutOfRangeException(nameof(index));
-                }
 
                 return _data[index];
             }
@@ -88,10 +86,10 @@
             set
             {
                 if (index >= _data.Length || index < 0)
-                {
                     throw new ArgumentOutOfRangeException(nameof(index));
-                }
 
+                if (ReverseOperation == null)
+                    throw new NotSupportedException($"{nameof(ReverseOperation)} should be define to perform update in {nameof(FenwickTree<TElement, TValue>)} ");
                 var inc = ReverseOperation(Selector(value), Selector(_data[index]));
                 _data[index] = value;
                 Update(index, inc);
@@ -106,6 +104,8 @@
         /// <remarks>This operation is O(log(N)).</remarks>
         public TValue GetOperationValueOnInterval(int pos)
         {
+            if (pos < 0 || pos >= _tree.Length)
+                throw new ArgumentOutOfRangeException(nameof(pos));
             TValue result = _tree[pos];
             pos = (pos & (pos + 1)) - 1;
             while (pos >= 0)

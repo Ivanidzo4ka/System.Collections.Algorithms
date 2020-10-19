@@ -1,7 +1,6 @@
 ﻿namespace System.Collections.Algorithms
 {
     using System.Collections.Generic;
-    using System.Linq;
     using System.Runtime.CompilerServices;
 
     /// <summary>

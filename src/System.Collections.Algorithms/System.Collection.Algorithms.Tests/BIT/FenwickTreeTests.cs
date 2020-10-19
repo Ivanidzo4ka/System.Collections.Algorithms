@@ -5,15 +5,15 @@ namespace System.Collections.Algorithms.Tests
 {
     public class FenwickTreeTests
     {
-
-        public static int Add(int a, int b) => a + b;
+        public static int Plus(int a, int b) => a + b;
         public static int Minus(int a, int b) => a - b;
 
         [Fact]
         public void GivenArrayWhenConstructFenwickTreeThenNoExceptions()
         {
-            var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, Add, Minus);
+            var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, Plus, Minus);
             Assert.NotNull(tree);
+            Assert.Equal(4, tree.Count);
         }
 
         [Fact]
@@ -28,9 +28,11 @@ namespace System.Collections.Algorithms.Tests
                 var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, null, null);
             });
 
-            Assert.Throws<ArgumentNullException>(() =>
+            Assert.Throws<NotSupportedException>(() =>
             {
                 var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, (a, b) => (a | b), null);
+                tree[3] = 3;
+
             });
 
             Assert.Throws<ArgumentException>(() =>
@@ -42,7 +44,7 @@ namespace System.Collections.Algorithms.Tests
         [Fact]
         public void GivenSumFenwickTreeWhenAskOperationOnIntervalThenReturnCorrectValues()
         {
-            var tree = new FenwickTree<int>(Enumerable.Range(1, 100), Add, Minus);
+            var tree = new FenwickTree<int>(Enumerable.Range(1, 100), Plus, Minus);
             Assert.Equal(1, tree.GetOperationValueOnInterval(0));
             for (int i = 1; i < tree.Count; i++)
                 Assert.Equal((i + 2) * (i + 1) / 2, tree.GetOperationValueOnInterval(i));
@@ -51,7 +53,7 @@ namespace System.Collections.Algorithms.Tests
         [Fact]
         public void GivenSumFenwickTreeWhenUpdateChangeValueThenIntervalUpdated()
         {
-            var tree = new FenwickTree<int>(Enumerable.Range(1, 5), (a, b) => a + b, (a, b) => a - b);
+            var tree = new FenwickTree<int>(Enumerable.Range(1, 5), Plus, Minus);
             tree[0] = 10;
             Assert.Equal(24, tree.GetOperationValueOnInterval(4));
             tree[4] = 10;
@@ -128,6 +130,7 @@ namespace System.Collections.Algorithms.Tests
             {
                 arr[i] = (uint)rand.Next();
                 tree[i] = arr[i];
+                Assert.Equal(arr[i], tree[i]);
             }
             Assert.Equal(arr, tree);
         }
@@ -135,11 +138,33 @@ namespace System.Collections.Algorithms.Tests
         [Fact]
         public void GivenFenwickTreeWhenSetOrGetThroughIndexerOutsideOfArrayThenThrowException()
         {
-            var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, Add, Minus);
+            var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, Plus, Minus);
             Assert.Throws<ArgumentOutOfRangeException>(() => tree[-1]);
             Assert.Throws<ArgumentOutOfRangeException>(() => tree[4]);
             Assert.Throws<ArgumentOutOfRangeException>(() => tree[-1] = 1);
             Assert.Throws<ArgumentOutOfRangeException>(() => tree[4] = 1);
+        }
+
+        [Fact]
+        public void GivenSumFenwickTreeWithSelectorWhenCreateTreeThenNoException()
+        {
+            var tree = new FenwickTree<Stub, int>(new[] { new Stub() { A = 1, B = 1 }, new Stub() { A = 100, B = 2 } }, Plus, Minus, (x) => x.B);
+            Assert.Equal(3, tree.GetOperationValueOnInterval(1));
+        }
+
+        [Theory]
+        [InlineData(-1)]
+        [InlineData(4)]
+        public void GivenBinaryIndexedTreeWheTryIntervalOutsideOfRangeThenThrowException(int pos)
+        {
+            var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, Plus, Minus);
+            Assert.Throws<ArgumentOutOfRangeException>(() => tree.GetOperationValueOnInterval(pos));
+        }
+
+        private class Stub
+        {
+            public int A;
+            public int B;
         }
     }
 }

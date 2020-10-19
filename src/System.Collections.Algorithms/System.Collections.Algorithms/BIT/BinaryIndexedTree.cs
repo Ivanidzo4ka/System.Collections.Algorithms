@@ -9,7 +9,8 @@
     /// </summary>
     /// <typeparam name="TElement">Type of elements.</typeparam>
     /// <typeparam name="TValue">Type on which operation operate.</typeparam>
-    public class BinaryIndexedTree<TElement, TValue>
+    /// <remarks>Also known as Counter tree Fenwick. Main difference with <see cref="FenwickTree{TElement, TValue}"/> is, this one is store two trees and able to answer questions on interval [L..R] rather than [0..R].</remarks>
+    public class BinaryIndexedTree<TElement, TValue> : IReadOnlyCollection<TElement>
     {
         private TElement[] _data;
         private TValue[] _left;
@@ -32,12 +33,14 @@
         {
             if (data is null)
                 throw new ArgumentNullException(nameof(data));
+#pragma warning disable CS8604 // Possible null reference argument.
             _data = data.Prepend(default).ToArray();
-            if (_data.Length == 0)
+#pragma warning restore CS8604 // Possible null reference argument.
+            if (_data.Length == 1)
                 throw new ArgumentException("Collection is empty", nameof(data));
 
             Operation = operation ?? throw new ArgumentNullException(nameof(operation));
-            ReverseOperation = reverseOperation ?? throw new ArgumentNullException(nameof(reverseOperation));
+            ReverseOperation = reverseOperation;
             Selector = selector ?? throw new ArgumentNullException(nameof(selector));
             _left = new TValue[_data.Length];
             _right = new TValue[_data.Length];
@@ -85,22 +88,21 @@
         {
             get
             {
-                if (index > _data.Length || index < 0)
-                {
+                index++;
+                if (index >= _data.Length || index < 1)
                     throw new ArgumentOutOfRangeException(nameof(index));
-                }
 
-                return _data[index + 1];
+                return _data[index];
             }
 
             set
             {
-                if (index > _data.Length || index < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                }
-
                 index++;
+                if (index >= _data.Length || index < 1)
+                    throw new ArgumentOutOfRangeException(nameof(index));
+                if (ReverseOperation == null)
+                    throw new NotSupportedException($"{nameof(ReverseOperation)} should be define to perform update in {nameof(BinaryIndexedTree<TElement, TValue>)} ");
+
                 var inc = ReverseOperation(Selector(value), Selector(_data[index]));
                 _data[index] = value;
                 Update(index, inc);
@@ -116,14 +118,14 @@
         /// <remarks>This operation is O(log(N)).</remarks>
         public TValue GetOperationValueOnInterval(int left, int right)
         {
-            if (left > right)
-                throw new ArgumentException(nameof(left), $"Should be smaller than {nameof(right)}");
-            if (left > _data.Length)
-                throw new ArgumentOutOfRangeException(nameof(left));
-            if (right > _data.Length)
-                throw new ArgumentOutOfRangeException(nameof(right));
             left++;
             right++;
+            if (left >= _data.Length || left < 1)
+                throw new ArgumentOutOfRangeException(nameof(left));
+            if (right >= _data.Length || right < 1)
+                throw new ArgumentOutOfRangeException(nameof(right));
+            if (left > right)
+                throw new ArgumentOutOfRangeException(nameof(left), $"Should be smaller or equal to {nameof(right)}");
             if (left == right)
                 return Selector(_data[left]);
             if (right - left == 1)
@@ -134,6 +136,18 @@
             var result = Operation(leftTreeClimb, rightTreeClimb);
             return Operation(result, Selector(_data[common]));
         }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the <see cref="BinaryIndexedTree{TElement, TValue}"/>.
+        /// </summary>
+        /// <returns>An enumerator for the contents of the  <see cref="BinaryIndexedTree{TElement, TValue}"/>.</returns>
+        public IEnumerator<TElement> GetEnumerator() => _data.AsEnumerable().Skip(1).GetEnumerator();
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the <see cref="BinaryIndexedTree{TElement, TValue}"/>.
+        /// </summary>
+        /// <returns>An enumerator for the contents of the  <see cref="BinaryIndexedTree{TElement, TValue}"/>.</returns>
+        IEnumerator IEnumerable.GetEnumerator() => _data.Skip(1).GetEnumerator();
 
         private (TValue, int) ClimbTree(TValue[] tree, int pos, Func<int, int> treeClimb, Func<int, bool> climbStop)
         {
