@@ -6,10 +6,10 @@ Implemented:
 - Treap
 - Sqrt tree
 - Van Emde Boas tree.
+- Fenwick tree.
 
 Would be nice to have:
 - Trie
 - Segment tree
 - Randomize heap
-- Fenwick tree.
 and maybe more
