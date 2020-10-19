@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Xunit;
 
-namespace System.Collections.Algorithms.Tests
+namespace System.Collections.Algorithms.Tests.BIT
 {
     public class BinaryIndexedTreeTests
     {
