@@ -3,57 +3,55 @@ using Xunit;
 
 namespace System.Collections.Algorithms.Tests.BIT
 {
-    public class FenwickTreeTests
+    public class FenwickTreeSlimSlimTests
     {
         public static int Plus(int a, int b) => a + b;
         public static int Minus(int a, int b) => a - b;
 
         [Fact]
-        public void GivenArrayWhenConstructFenwickTreeThenNoExceptions()
+        public void GivenArrayWhenConstructFenwickTreeSlimThenNoExceptions()
         {
-            var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, Plus, Minus);
+            var tree = new FenwickTreeSlim<int>(new[] { 1, 2, 3, 4 }, Plus, Minus);
             Assert.NotNull(tree);
             Assert.Equal(4, tree.Count);
         }
 
         [Fact]
-        public void GivenNullArgumentsWhenConstructFenwickTreeThenArgumentNullExceptionThrown()
+        public void GivenNullArgumentsWhenConstructFenwickTreeSlimThenArgumentNullExceptionThrown()
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                var tree = new FenwickTree<int>(null, null, null);
+                var tree = new FenwickTreeSlim<int>(null, null, null);
             });
             Assert.Throws<ArgumentNullException>(() =>
             {
-                var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, null, null);
+                var tree = new FenwickTreeSlim<int>(new[] { 1, 2, 3, 4 }, null, null);
             });
 
-            Assert.Throws<NotSupportedException>(() =>
+            Assert.Throws<ArgumentNullException>(() =>
             {
-                var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, (a, b) => (a | b), null);
-                tree[3] = 3;
-
+                var tree = new FenwickTreeSlim<int>(new[] { 1, 2, 3, 4 }, (a, b) => (a | b), null);
             });
 
             Assert.Throws<ArgumentException>(() =>
             {
-                var tree = new FenwickTree<int>(new int[0] { }, (a, b) => (a | b), (a, b) => (a | b));
+                var tree = new FenwickTreeSlim<int>(new int[0] { }, (a, b) => (a | b), (a, b) => (a | b));
             });
         }
 
         [Fact]
-        public void GivenSumFenwickTreeWhenAskOperationOnIntervalThenReturnCorrectValues()
+        public void GivenSumFenwickTreeSlimWhenAskOperationOnIntervalThenReturnCorrectValues()
         {
-            var tree = new FenwickTree<int>(Enumerable.Range(1, 100), Plus, Minus);
+            var tree = new FenwickTreeSlim<int>(Enumerable.Range(1, 100), Plus, Minus);
             Assert.Equal(1, tree.GetOperationValueOnInterval(0));
             for (int i = 1; i < tree.Count; i++)
                 Assert.Equal((i + 2) * (i + 1) / 2, tree.GetOperationValueOnInterval(i));
         }
 
         [Fact]
-        public void GivenSumFenwickTreeWhenUpdateChangeValueThenIntervalUpdated()
+        public void GivenSumFenwickTreeSlimWhenUpdateChangeValueThenIntervalUpdated()
         {
-            var tree = new FenwickTree<int>(Enumerable.Range(1, 5), Plus, Minus);
+            var tree = new FenwickTreeSlim<int>(Enumerable.Range(1, 5), Plus, Minus);
             tree[0] = 10;
             Assert.Equal(24, tree.GetOperationValueOnInterval(4));
             tree[4] = 10;
@@ -61,9 +59,9 @@ namespace System.Collections.Algorithms.Tests.BIT
         }
 
         [Fact]
-        public void GivenMinFenwickTreeWhenUpdateChangeValueThenIntervalUpdated()
+        public void GivenMinFenwickTreeSlimWhenUpdateChangeValueThenIntervalUpdated()
         {
-            var tree = new FenwickTree<int>(Enumerable.Range(100, 5),
+            var tree = new FenwickTreeSlim<int>(Enumerable.Range(100, 5),
                 (a, b) => Math.Min(a, b),
                 (a, b) =>
                 {
@@ -79,13 +77,13 @@ namespace System.Collections.Algorithms.Tests.BIT
         }
 
         [Fact]
-        public void GivenSumFenwickTreeWhenFilledWithRandomThenIntervalReturnsCorrectValues()
+        public void GivenSumFenwickTreeSlimWhenFilledWithRandomThenIntervalReturnsCorrectValues()
         {
             var rand = new Random();
             var arr = new uint[257];
             for (int i = 0; i < arr.Length; i++)
                 arr[i] = (uint)rand.Next();
-            var tree = new FenwickTree<uint>(arr, (a, b) => a + b, (a, b) => a - b);
+            var tree = new FenwickTreeSlim<uint>(arr, (a, b) => a + b, (a, b) => a - b);
             uint sum = 0;
             for (int i = 0; i < arr.Length; i++)
             {
@@ -95,13 +93,13 @@ namespace System.Collections.Algorithms.Tests.BIT
         }
 
         [Fact]
-        public void GivenRandomSumFenwickTreeWhenUpdateValuesThenIntervalReturnsCorrectValues()
+        public void GivenRandomSumFenwickTreeSlimWhenUpdateValuesThenIntervalReturnsCorrectValues()
         {
             var rand = new Random();
             var arr = new uint[64];
             for (int i = 0; i < arr.Length; i++)
                 arr[i] = (uint)rand.Next();
-            var tree = new FenwickTree<uint>(arr, (a, b) => a + b, (a, b) => a - b);
+            var tree = new FenwickTreeSlim<uint>(arr, (a, b) => a + b, (a, b) => a - b);
             uint sum = 0;
             for (int i = 0; i < arr.Length; i++)
             {
@@ -118,13 +116,13 @@ namespace System.Collections.Algorithms.Tests.BIT
         }
 
         [Fact]
-        public void GivenRandomSumFenwickTreeWhenEnumerateThenSameAsOriginalCollection()
+        public void GivenRandomSumFenwickTreeSlimWhenEnumerateThenSameAsOriginalCollection()
         {
             var rand = new Random();
-            var arr = new uint[64];
+            var arr = new uint[4];
             for (int i = 0; i < arr.Length; i++)
                 arr[i] = (uint)rand.Next();
-            var tree = new FenwickTree<uint>(arr, (a, b) => a + b, (a, b) => a - b);
+            var tree = new FenwickTreeSlim<uint>(arr, (a, b) => a + b, (a, b) => a - b);
             Assert.Equal(arr, tree);
             for (int i = 0; i < arr.Length; i++)
             {
@@ -136,35 +134,14 @@ namespace System.Collections.Algorithms.Tests.BIT
         }
 
         [Fact]
-        public void GivenFenwickTreeWhenSetOrGetThroughIndexerOutsideOfArrayThenThrowException()
+        public void GivenFenwickTreeSlimWhenSetOrGetThroughIndexerOutsideOfArrayThenThrowException()
         {
-            var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, Plus, Minus);
+            var tree = new FenwickTreeSlim<int>(new[] { 1, 2, 3, 4 }, Plus, Minus);
             Assert.Throws<ArgumentOutOfRangeException>(() => tree[-1]);
             Assert.Throws<ArgumentOutOfRangeException>(() => tree[4]);
             Assert.Throws<ArgumentOutOfRangeException>(() => tree[-1] = 1);
             Assert.Throws<ArgumentOutOfRangeException>(() => tree[4] = 1);
         }
 
-        [Fact]
-        public void GivenSumFenwickTreeWithSelectorWhenCreateTreeThenNoException()
-        {
-            var tree = new FenwickTree<Stub, int>(new[] { new Stub() { A = 1, B = 1 }, new Stub() { A = 100, B = 2 } }, Plus, Minus, (x) => x.B);
-            Assert.Equal(3, tree.GetOperationValueOnInterval(1));
-        }
-
-        [Theory]
-        [InlineData(-1)]
-        [InlineData(4)]
-        public void GivenBinaryIndexedTreeWheTryIntervalOutsideOfRangeThenThrowException(int pos)
-        {
-            var tree = new FenwickTree<int>(new[] { 1, 2, 3, 4 }, Plus, Minus);
-            Assert.Throws<ArgumentOutOfRangeException>(() => tree.GetOperationValueOnInterval(pos));
-        }
-
-        private class Stub
-        {
-            public int A;
-            public int B;
-        }
     }
 }

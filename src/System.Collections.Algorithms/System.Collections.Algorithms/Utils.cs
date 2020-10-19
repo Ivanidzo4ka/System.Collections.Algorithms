@@ -1,7 +1,7 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace System.Collections.Algorithms
+﻿namespace System.Collections.Algorithms
 {
+    using System.Runtime.CompilerServices;
+
     /// <summary>
     /// Set of useful internal utils.
     /// </summary>
