@@ -110,7 +110,7 @@
         }
 
         /// <summary>
-        /// Get result of <see cref="FenwickTree{TElement, TValue}.Operation"/> performed on interval [0, pos] in <see cref="FenwickTree{TElement, TValue}"/>.
+        /// Get result of <see cref="BinaryIndexedTree{TElement, TValue}.Operation"/> performed on interval [0, pos] in <see cref="BinaryIndexedTree{TElement, TValue}"/>.
         /// </summary>
         /// <param name="left">Left border of interval. Inclusive.</param>
         /// <param name="right">Right border of interval. Inclusive.</param>
@@ -135,6 +135,20 @@
             var (rightTreeClimb, _) = ClimbTree(_left, right, (x) => x - Utils.IsolateLastBit(x), (x) => x >= left);
             var result = Operation(leftTreeClimb, rightTreeClimb);
             return Operation(result, Selector(_data[common]));
+        }
+
+        /// <summary>
+        /// Set value of <paramref name="index"/> element to result of applying <see cref="BinaryIndexedTree{TElement, TValue}.Operation"/> to it and <paramref name="value"/>).
+        /// </summary>
+        /// <param name="index">Index of element.</param>
+        /// <param name="value">Value to apply.</param>
+        /// <remarks>This is O(log(n)) operation.</remarks>
+        public void ApplyOperationToElement(int index, TElement value)
+        {
+            if (index >= Count || index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            index++;
+            Update(index, Selector(value));
         }
 
         /// <summary>

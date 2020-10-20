@@ -40,7 +40,7 @@
             for (int i = 0; i < _data.Length; i++)
                 _tree[i] = defaultValue;
             for (int i = 0; i < _data.Length; i++)
-                Update(i, Selector(_data[i]));
+                Add(i, Selector(_data[i]));
         }
 
         /// <summary>
@@ -92,7 +92,7 @@
                     throw new NotSupportedException($"{nameof(ReverseOperation)} should be define to perform update in {nameof(FenwickTree<TElement, TValue>)} ");
                 var inc = ReverseOperation(Selector(value), Selector(_data[index]));
                 _data[index] = value;
-                Update(index, inc);
+                Add(index, inc);
             }
         }
 
@@ -118,6 +118,20 @@
         }
 
         /// <summary>
+        /// Set value of <paramref name="index"/> element to result of applying <see cref="FenwickTree{TElement, TValue}.Operation"/> to it and <paramref name="value"/>).
+        /// </summary>
+        /// <param name="index">Index of element.</param>
+        /// <param name="value">Value to apply.</param>
+        /// <remarks>This is O(log(n)) operation.</remarks>
+        public void ApplyOperationToElement(int index, TElement value)
+        {
+            if (index >= Count || index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            index++;
+            Add(index, Selector(value));
+        }
+
+        /// <summary>
         /// Returns an enumerator that iterates through the <see cref="FenwickTree{TElement, TValue}"/>.
         /// </summary>
         /// <returns>An enumerator for the contents of the  <see cref="FenwickTree{TElement, TValue}"/>.</returns>
@@ -129,7 +143,7 @@
         /// <returns>An enumerator for the contents of the  <see cref="FenwickTree{TElement, TValue}"/>.</returns>
         IEnumerator IEnumerable.GetEnumerator() => _data.GetEnumerator();
 
-        private void Update(int pos, TValue increment)
+        private void Add(int pos, TValue increment)
         {
             for (; pos < _data.Length; pos = pos | (pos + 1))
                 _tree[pos] = Operation(_tree[pos], increment);

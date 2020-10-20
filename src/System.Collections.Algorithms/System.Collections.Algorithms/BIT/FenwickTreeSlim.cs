@@ -45,7 +45,7 @@
             var index = 0;
             foreach (T elem in data)
             {
-                Update(++index, elem);
+                Add(++index, elem);
             }
         }
 
@@ -92,11 +92,23 @@
                 if (index >= Count || index < 0)
                     throw new ArgumentOutOfRangeException(nameof(index));
                 index++;
-                if (ReverseOperation == null)
-                    throw new NotSupportedException($"{nameof(ReverseOperation)} should be define to perform update in {nameof(FenwickTreeSlim<T>)} ");
                 var inc = ReverseOperation(value, GetValue(index));
-                Update(index, inc);
+                Add(index, inc);
             }
+        }
+
+        /// <summary>
+        /// Set value of <paramref name="index"/> element to result of applying <see cref="FenwickTreeSlim{T}.Operation"/> to it and <paramref name="value"/>).
+        /// </summary>
+        /// <param name="index">Index of element.</param>
+        /// <param name="value">Value to apply.</param>
+        /// <remarks>This is O(log(n)) operation.</remarks>
+        public void ApplyOperationToElement(int index, T value)
+        {
+            if (index >= Count || index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            index++;
+            Add(index, value);
         }
 
         /// <summary>
@@ -134,7 +146,7 @@
         /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        private void Update(int pos, T increment)
+        private void Add(int pos, T increment)
         {
             _version++;
             while (pos <= Count)
@@ -146,19 +158,19 @@
 
         private T GetValue(int pos)
         {
-            T sum = _tree[pos];
+            T result = _tree[pos];
             if (pos > 0)
             {
                 int z = pos - (pos & -pos);
                 pos--;
                 while (pos != z)
                 {
-                    sum = ReverseOperation(sum, _tree[pos]);
+                    result = ReverseOperation(result, _tree[pos]);
                     pos -= pos & -pos;
                 }
             }
 
-            return sum;
+            return result;
         }
 
         /// <summary>
