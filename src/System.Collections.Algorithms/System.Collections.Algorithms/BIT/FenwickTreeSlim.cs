@@ -32,20 +32,18 @@
         {
             if (data is null)
                 throw new ArgumentNullException(nameof(data));
-            var size = data.Count();
-            if (size == 0)
+            _tree = data.Prepend(defaultValue).ToArray();
+            if (_tree.Length == 1)
                 throw new ArgumentException("Collection is empty", nameof(data));
-            _tree = new T[size + 1];
             Operation = operation ?? throw new ArgumentNullException(nameof(operation));
             ReverseOperation = reverseOperation ?? throw new ArgumentNullException(nameof(reverseOperation));
-            Count = size;
+            Count = _tree.Length - 1;
             _version = 0;
-            for (int i = 0; i < size + 1; i++)
-                _tree[i] = defaultValue;
-            var index = 0;
-            foreach (T elem in data)
+            for (int i = 1, j; i < _tree.Length; i++)
             {
-                Add(++index, elem);
+                int pos = i + (i & -i);
+                if (pos < _tree.Length)
+                    _tree[pos] = Operation(_tree[i], _tree[pos]);
             }
         }
 
