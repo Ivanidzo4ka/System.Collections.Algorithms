@@ -63,7 +63,7 @@
         public Node<TKey, TValue> Peek()
         {
             if (_root is null)
-                throw ThrowForEmptyQueue();
+                throw ExceptionForEmptyQueue();
             return _root;
         }
 
@@ -89,11 +89,12 @@
         public Node<TKey, TValue> Dequeue()
         {
             if (_root is null)
-                throw ThrowForEmptyQueue();
+                throw ExceptionForEmptyQueue();
             var result = _root;
             _root = MergeInternal(_root.Left, _root.Right);
             result.Left = null;
             result.Right = null;
+            result.Parent = null;
             result.Rank = 0;
             Count--;
             return result;
@@ -114,6 +115,7 @@
             _root = MergeInternal(_root.Left, _root.Right);
             result.Left = null;
             result.Right = null;
+            result.Parent = null;
             result.Rank = 0;
             Count--;
             return true;
@@ -126,6 +128,14 @@
             internal Node<TKey, TValue> Left;
             internal Node<TKey, TValue> Right;
             internal short Rank;
+            internal Node<TKey, TValue> Parent;
+        }
+
+        public void Remove(Node<TKey, TValue> node)
+        {
+            // have to be min value instead of default;
+            DecreaseKey(node, default);
+            Dequeue();
         }
 
         private Node<TKey, TValue> MergeInternal(Node<TKey, TValue> x, Node<TKey, TValue> y)
@@ -140,7 +150,10 @@
                 y = temp;
             }
 
-            x.Right = MergeInternal(x.Right, y);
+            var combined = MergeInternal(x.Right, y);
+            y.Parent = combined;
+            x.Right.Parent = combined;
+            x.Right = combined;
             if (x.Left is null)
             {
                 var temp = x.Left;
@@ -162,7 +175,31 @@
 
         }
 
-        private Exception ThrowForEmptyQueue() =>
+        private void DecreaseKey(Node<TKey, TValue> node, TKey value)
+        {
+            node.Key = value;
+            if (_root == node)
+                return;
+            var parent = node.Parent;
+            if (parent.Left == node)
+                parent.Left = null;
+            else
+                parent.Right = null;
+            while (parent != null)
+            {
+
+                if ((parent.Right?.Rank ?? 0) > (parent.Left?.Rank ?? 0))
+                {
+                    var temp = parent.Left;
+                    parent.Left = parent.Right;
+                    parent.Right = temp;
+                }
+                parent = parent.Parent;
+            }
+            _root = MergeInternal(_root, node);
+        }
+
+        private Exception ExceptionForEmptyQueue() =>
              new InvalidOperationException($"{nameof(LeftistHeap<TKey, TValue>)} is empty.");
     }
 }
